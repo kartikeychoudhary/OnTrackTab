@@ -1,22 +1,109 @@
-# CODING AGENTS: READ THIS FIRST
+# OnTrackTab
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+OnTrackTab is a calmer, local-first Chrome new tab extension built with React, TypeScript, and Vite. It replaces the default new tab page with a customizable dashboard for search, time, weather, calendar, notes, most-visited sites, and rotating wallpapers.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+## Features
 
-## What you should do — IMPORTANT
+- Chrome new tab override using Manifest V3.
+- Bookmark-first search with Google fallback and `/` keyboard focus.
+- Clock, weather, calendar, notes, and most-visited widgets.
+- Grid layout mode with draggable and resizable widgets.
+- Floating and bento layout modes.
+- Generated canvas wallpapers, custom image/video backgrounds, and optional Unsplash wallpapers.
+- Local settings storage for layout, notes, liked wallpapers, API keys, and widget preferences.
+- Optional Tomorrow.io weather integration.
+- Optional Unsplash wallpaper integration with local cache support.
 
-**Read `ontracktab/project/OnTrackTab.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+## Tech Stack
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+- React 18
+- TypeScript
+- Vite
+- Chrome Extension Manifest V3
+- react-grid-layout
+- lucide-react
 
-## About the design files
+## Getting Started
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+Install dependencies:
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+```bash
+npm install
+```
 
-## Bundle contents
+Run the local dev server:
 
-- `ontracktab/README.md` — this file
-- `ontracktab/project/` — the `OnTrackTab` project files (HTML prototypes, assets, components)
+```bash
+npm run dev
+```
+
+Build the extension:
+
+```bash
+npm run build
+```
+
+The production extension output is generated in `dist/`.
+
+## Load In Chrome
+
+1. Run `npm run build`.
+2. Open Chrome and go to `chrome://extensions`.
+3. Enable Developer mode.
+4. Click Load unpacked.
+5. Select the generated `dist/` folder.
+6. Open a new tab.
+
+## API Keys
+
+API keys are optional. Without them, OnTrackTab still works with generated wallpapers, local notes, calendar, search, and fallback/demo weather data.
+
+### Tomorrow.io
+
+Used for live weather data.
+
+1. Create a free Tomorrow.io account.
+2. Open the Weather API dashboard.
+3. Copy the default API key from the API Keys section.
+4. Open OnTrackTab settings, go to API Keys, and paste it under Tomorrow.io.
+
+### Unsplash
+
+Used for live wallpaper photos.
+
+1. Create an Unsplash developer app.
+2. Open the app's Keys section.
+3. Copy the Access Key. The Secret Key is not needed.
+4. Open OnTrackTab settings, go to API Keys, and paste it under Unsplash.
+5. In the Background tab, choose Unsplash as the source.
+
+## Privacy And Storage
+
+OnTrackTab is local-first. Settings, notes, liked wallpapers, cached Unsplash wallpapers, and API keys are stored locally using browser storage or local storage. The extension only calls external APIs when the user adds the relevant API key and enables that feature.
+
+Chrome permissions are used for:
+
+- `storage`: save settings and cached extension data.
+- `bookmarks`: power bookmark search.
+- `history` and `topSites`: show most-visited sites.
+
+Host permissions are limited to Tomorrow.io and Unsplash endpoints used by the weather and wallpaper integrations.
+
+## Project Structure
+
+```text
+src/
+  components/      UI components and widgets
+  constants/       Default tweak/settings values
+  hooks/           Reusable React state hooks
+  lib/             Storage, migration, and rendering helpers
+  services/        External API integrations
+  styles/          Application CSS
+  types/           Shared TypeScript types
+```
+
+## Scripts
+
+- `npm run dev`: start Vite locally.
+- `npm run build`: type-check and build the extension into `dist/`.
+- `npm run preview`: preview the built Vite app locally.
