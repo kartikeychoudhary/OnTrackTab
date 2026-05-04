@@ -14,6 +14,18 @@ OnTrackTab is a calmer, local-first Chrome new tab extension built with React, T
 - Optional Tomorrow.io weather integration.
 - Optional Unsplash wallpaper integration with local cache support.
 
+## Screenshots
+
+![OnTrackTab home dashboard](store-assets/screenshots/01-home.png)
+
+![Bookmark-first search](store-assets/screenshots/02-bookmark-search.png)
+
+![Editable grid layout](store-assets/screenshots/03-grid-layout-edit.png)
+
+![Background settings](store-assets/screenshots/04-background-settings.png)
+
+![API key settings](store-assets/screenshots/05-api-keys.png)
+
 ## Tech Stack
 
 - React 18
