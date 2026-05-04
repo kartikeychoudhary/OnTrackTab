@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "OnTrackTab",
+  "version": "0.4.2",
+  "description": "A calmer, local-first Chrome new tab page.",
+  "chrome_url_overrides": {
+    "newtab": "OnTrackTab.html"
+  },
+  "permissions": ["storage", "bookmarks", "history", "topSites"],
+  "host_permissions": [
+    "https://api.tomorrow.io/*",
+    "https://api.unsplash.com/*",
+    "https://images.unsplash.com/*"
+  ]
+}
