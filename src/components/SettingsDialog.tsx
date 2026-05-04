@@ -1,5 +1,6 @@
 import React from 'react';
 import { CalendarDays, Cloud, Grid2X2, Image, Info, KeyRound, Search, SlidersHorizontal, Trash2, Video } from 'lucide-react';
+import { APP_VERSION, RELEASE_NOTES } from '../constants/appMeta';
 import type { BackgroundSettings, LikedWallpaper, Settings, Tweaks, Wallpaper, WidgetId } from '../types';
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -102,7 +103,7 @@ export function SettingsDialog({
               </button>
             ))}
             <div className="modal__nav-spacer" />
-            <div className="modal__nav-foot">v0.4.2 · local</div>
+            <div className="modal__nav-foot">v{APP_VERSION}</div>
           </nav>
 
           <div className="modal__content">
@@ -208,7 +209,7 @@ export function SettingsDialog({
 
             {section === 'search' && <div className="settings__section"><div className="settings__group-title">Default engine</div><Row label="Search engine"><Select value={settings.searchEngine} options={['Google', 'DuckDuckGo', 'Bing', 'Kagi'].map((v) => ({ value: v, label: v }))} onChange={(v) => set({ searchEngine: v })} /></Row><Row label="Keyboard shortcut"><kbd className="settings__kbd">/</kbd></Row></div>}
             {section === 'api' && <div className="settings__section"><div className="settings__group-title">Tomorrow.io</div><div className="settings__group-help">Paste your Tomorrow.io API key to enable live weather data.</div><input className="settings__input settings__input--mono" placeholder="Tomorrow.io API key" value={settings.tomorrowApiKey} type="password" onChange={(e) => set({ tomorrowApiKey: e.target.value })} /><div className="settings__keyhint"><Info size={13} /> Create a free Tomorrow.io account, open the Weather API dashboard, then copy the default API key from the API Keys section and paste it here.</div><div className="settings__group-title" style={{ marginTop: 24 }}>Unsplash</div><div className="settings__group-help">Paste the Unsplash <b>Access Key</b>. The Secret Key is not needed for public wallpaper photos.</div><input className="settings__input settings__input--mono" placeholder="Unsplash Access Key / Client ID" value={settings.unsplashApiKey} type="password" onChange={(e) => set({ unsplashApiKey: e.target.value })} /><div className="settings__keyhint"><Info size={13} /> Create an Unsplash developer app, open its Keys section, copy the Access Key, then paste it here. Use the Background tab to select Unsplash.</div><div className="settings__keyhint">Keys and cached wallpapers are stored locally by the extension.</div></div>}
-            {section === 'about' && <div className="settings__section"><div className="settings__about"><div className="settings__about-mark">OT</div><div className="settings__about-name">OnTrackTab</div><div className="settings__about-ver">Version 0.4.2 · April 2026</div><div className="settings__about-desc">A calmer new tab. Local-first, glass-light.</div></div></div>}
+            {section === 'about' && <div className="settings__section"><div className="settings__about"><div className="settings__about-mark">OT</div><div className="settings__about-name">OnTrackTab</div><div className="settings__about-ver">Version {APP_VERSION} · May 2026</div><div className="settings__about-desc">A calmer new tab. Local-first, glass-light.</div></div><div className="settings__release"><div className="settings__group-title">Release notes</div><ul className="settings__release-list">{RELEASE_NOTES.map((note) => <li key={note}>{note}</li>)}</ul></div></div>}
           </div>
         </div>
 

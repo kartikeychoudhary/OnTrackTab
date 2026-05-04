@@ -35,9 +35,24 @@ export default function App() {
   const generatedWallpaper = wallpapers.find((w) => w.id === activeTweaks.wallpaperId) || wallpapers[0];
   const background = settings.background;
   const unsplash = useUnsplashWallpapers(settings, background.type === 'unsplash');
+  const isUnsplashBackground = background.type === 'unsplash';
+  const customImageWallpaper = React.useMemo<RenderedWallpaper | null>(() => {
+    if (background.type !== 'image' || !background.imageUrl) return null;
+    const likedImage = likedWallpapers.find((wallpaper) => wallpaper.dataUrl === background.imageUrl);
+    return {
+      id: likedImage?.id || 'custom-image',
+      name: likedImage?.name || 'Custom image',
+      photographer: 'Pinned wallpaper',
+      location: 'Local background',
+      kind: 'dark',
+      paint: () => {},
+      dataUrl: background.imageUrl,
+      luminance: likedImage?.luminance ?? generatedWallpaper.luminance,
+    };
+  }, [background.imageUrl, background.type, generatedWallpaper.luminance, likedWallpapers]);
 
-  const activeWallpaper = background.type === 'unsplash' && unsplash.activeWallpaper ? unsplash.activeWallpaper : generatedWallpaper;
-  const effectiveImageUrl = background.type === 'image' && background.imageUrl ? background.imageUrl : activeWallpaper.dataUrl;
+  const activeWallpaper = isUnsplashBackground && unsplash.activeWallpaper ? unsplash.activeWallpaper : customImageWallpaper || generatedWallpaper;
+  const effectiveImageUrl = customImageWallpaper?.dataUrl || activeWallpaper.dataUrl;
   const theme = activeWallpaper.luminance > 150 ? 'light' : 'dark';
   const isGrid = activeTweaks.layout === 'grid';
   const liked = likedWallpapers.some((wallpaper) => wallpaper.id === activeWallpaper.id);
@@ -53,21 +68,29 @@ export default function App() {
     setLikedWallpapers((prev) => (
       prev.some((wallpaper) => wallpaper.id === activeWallpaper.id)
         ? prev.filter((wallpaper) => wallpaper.id !== activeWallpaper.id)
-        : [...prev, { id: activeWallpaper.id, name: activeWallpaper.name, dataUrl: activeWallpaper.dataUrl }]
+        : [...prev, { id: activeWallpaper.id, name: activeWallpaper.name, dataUrl: activeWallpaper.dataUrl, luminance: activeWallpaper.luminance }]
     ));
   };
 
   const nextWallpaper = () => {
-    if (background.type === 'unsplash' && unsplash.cache.items.length > 0) {
+    if (isUnsplashBackground && unsplash.cache.items.length > 0) {
       unsplash.nextWallpaper();
       return;
     }
     const idx = wallpapers.findIndex((wallpaper) => wallpaper.id === generatedWallpaper.id);
+    if (background.type !== 'generated') {
+      setSettings((prev) => ({ ...prev, background: { ...prev.background, type: 'generated' } }));
+    }
     setTweak('wallpaperId', wallpapers[(idx + 1) % wallpapers.length].id);
   };
 
   const useLikedWallpaper = (wallpaper: LikedWallpaper) => {
     setTweak('wallpaperId', wallpaper.id);
+    setSettings((prev) => ({
+      ...prev,
+      wallpaperRotateMinutes: 0,
+      background: { ...prev.background, type: 'image', imageUrl: wallpaper.dataUrl },
+    }));
     setSettingsOpen(false);
   };
 
@@ -96,17 +119,18 @@ export default function App() {
         {!editMode && (
           <div className="pos-wp-credit">
             <WallpaperCredit
+              key={`${background.type}:${activeWallpaper.id}`}
               wp={activeWallpaper}
               liked={liked}
               onToggleLike={toggleLike}
               onNext={nextWallpaper}
-              onPrev={background.type === 'unsplash' ? unsplash.previousWallpaper : undefined}
-              onRefresh={background.type === 'unsplash' ? unsplash.refresh : undefined}
+              onPrev={isUnsplashBackground ? unsplash.previousWallpaper : undefined}
+              onRefresh={isUnsplashBackground ? unsplash.refresh : undefined}
               refreshDisabled={unsplash.loading || !settings.unsplashApiKey.trim()}
-              remaining={background.type === 'unsplash' ? unsplash.cache.remaining : undefined}
-              limit={background.type === 'unsplash' ? unsplash.cache.limit : undefined}
-              cachePosition={background.type === 'unsplash' && unsplash.cache.items.length ? `${unsplash.cache.activeIndex + 1}/${unsplash.cache.items.length}` : undefined}
-              status={unsplash.error || (background.type === 'unsplash' && !settings.unsplashApiKey.trim() ? 'Add Unsplash key' : undefined)}
+              remaining={isUnsplashBackground ? unsplash.cache.remaining : undefined}
+              limit={isUnsplashBackground ? unsplash.cache.limit : undefined}
+              cachePosition={isUnsplashBackground && unsplash.cache.items.length ? `${unsplash.cache.activeIndex + 1}/${unsplash.cache.items.length}` : undefined}
+              status={unsplash.error || (isUnsplashBackground && !settings.unsplashApiKey.trim() ? 'Add Unsplash key' : undefined)}
             />
           </div>
         )}

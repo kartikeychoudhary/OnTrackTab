@@ -731,6 +731,8 @@ button { font-family: inherit; }
   width: 44px; height: 44px;
   border-radius: 50%;
   display: grid; place-items: center;
+  font-size: 23px;
+  line-height: 1;
   color: var(--fg);
   cursor: pointer;
   z-index: 5;
@@ -1079,7 +1081,7 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 
-.settings__about { text-align: center; padding: 30px 20px; }
+.settings__about { text-align: center; padding: 26px 20px 18px; }
 .settings__about-mark {
   width: 64px; height: 64px;
   border-radius: 18px;
@@ -1108,6 +1110,18 @@ button { font-family: inherit; }
 }
 .settings__about-links a { color: var(--accent); text-decoration: none; font-weight: 500; }
 .settings__about-links span { color: rgba(26,24,20,0.3); }
+.settings__release {
+  max-width: 520px;
+  margin: 8px auto 0;
+  text-align: left;
+}
+.settings__release-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: rgba(26,24,20,0.72);
+  font-size: 13px;
+  line-height: 1.7;
+}
 
 /* ── UI primitives (light) ───────────────────────────────────────── */
 .ui-toggle {

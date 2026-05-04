@@ -47,6 +47,7 @@ export interface LikedWallpaper {
   id: string;
   name: string;
   dataUrl: string;
+  luminance?: number;
 }
 
 export interface Tweaks {
