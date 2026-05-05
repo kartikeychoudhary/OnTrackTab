@@ -348,7 +348,7 @@ function WeatherIcon({ kind, size = 28 }: { kind: string; size?: number }) {
   return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M7 18h10a4 4 0 0 0 .6-7.95 5.5 5.5 0 0 0-10.7-1A4 4 0 0 0 7 18z" fill="currentColor" fillOpacity="0.25" />{kind === 'cloud-sun' && <circle cx="8" cy="8" r="3" fill="currentColor" fillOpacity="0.18" />}</svg>;
 }
 
-export function WeatherWidget({ locations, apiKey, tempUnit }: { locations: string[]; apiKey: string; tempUnit: 'C' | 'F' }) {
+export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locations: string[]; apiKey: string; tempUnit: 'C' | 'F'; onError?: (message: string) => void }) {
   const [activeIdx, setActiveIdx] = React.useState(0);
   const list = locations.length ? locations : ['San Francisco, CA'];
   const safeIdx = Math.min(activeIdx, list.length - 1);
@@ -379,11 +379,13 @@ export function WeatherWidget({ locations, apiKey, tempUnit }: { locations: stri
       setError('');
     } catch {
       setData(cached ? { ...cached, source: 'cache' } : fallback);
+      const message = cached ? `Weather refresh failed for ${loc}. Using cached weather.` : `Weather unavailable for ${loc}. Check the location or API key.`;
       setError(cached ? 'Using cached weather' : 'Weather unavailable');
+      onError?.(message);
     } finally {
       setLoading(false);
     }
-  }, [apiKey, fallback, loc, tempUnit]);
+  }, [apiKey, fallback, loc, onError, tempUnit]);
 
   React.useEffect(() => {
     loadWeather(false);
@@ -519,6 +521,7 @@ export function WallpaperCredit({
   onPrev,
   onRefresh,
   refreshDisabled,
+  refreshLoading,
   remaining,
   limit,
   cachePosition,
@@ -531,6 +534,7 @@ export function WallpaperCredit({
   onPrev?: () => void;
   onRefresh?: () => void;
   refreshDisabled?: boolean;
+  refreshLoading?: boolean;
   remaining?: number;
   limit?: number;
   cachePosition?: string;
@@ -541,9 +545,9 @@ export function WallpaperCredit({
   return (
     <div className="glass glass--sm wp-credit">
       <button className={`wp-credit__heart ${liked ? 'is-liked' : ''}`} onClick={onToggleLike} aria-label={liked ? 'Unlike wallpaper' : 'Like wallpaper'}><svg width="14" height="14" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg></button>
-      <div className="wp-credit__text"><div className="wp-credit__name">{wp.name}</div><div className="wp-credit__meta">{[meta, cachePosition, quota, status].filter(Boolean).join(' · ')}</div></div>
+      <div className="wp-credit__text"><div className="wp-credit__name">{wp.name}</div><div className="wp-credit__meta">{[meta, cachePosition, quota, refreshLoading ? 'Fetching wallpaper' : status].filter(Boolean).join(' · ')}</div></div>
       {onPrev && <button className="wp-credit__next" onClick={onPrev} aria-label="Previous cached wallpaper"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg></button>}
-      {onRefresh && <button className="wp-credit__next" onClick={onRefresh} disabled={refreshDisabled} aria-label="Fetch new Unsplash wallpaper"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-9-9M21 3v6h-6" /></svg></button>}
+      {onRefresh && <button className={`wp-credit__next ${refreshLoading ? 'is-loading' : ''}`} onClick={onRefresh} disabled={refreshDisabled} aria-label="Fetch new Unsplash wallpaper"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-9-9M21 3v6h-6" /></svg></button>}
       <button className="wp-credit__next" onClick={onNext} aria-label="Next wallpaper"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg></button>
     </div>
   );

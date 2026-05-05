@@ -1,7 +1,7 @@
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.0.1';
 
 export const RELEASE_NOTES = [
-  'Chrome Web Store-ready 1.0 release.',
-  'Cleaner component architecture and publishing assets.',
-  'Improved wallpaper controls, liked wallpaper pinning, and settings guidance.',
+  'Unsplash refresh now waits for explicit refresh after query edits and stops repeated invalid-key retries.',
+  'Error and saved-key feedback now appears as toast messages.',
+  'Liked wallpapers can be exported and imported with duplicate protection.',
 ];

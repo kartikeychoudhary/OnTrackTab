@@ -3,11 +3,12 @@ import { loadExtensionValue, saveExtensionValue } from '../lib/extensionStorage'
 import { fetchUnsplashWallpaper, UNSPLASH_CACHE_KEY, unsplashQueryKey, type UnsplashCacheState } from '../services/unsplash';
 import type { Settings } from '../types';
 
-export function useUnsplashWallpapers(settings: Settings, enabled: boolean) {
+export function useUnsplashWallpapers(settings: Settings, enabled: boolean, onError?: (message: string) => void) {
   const [cache, setCache] = React.useState<UnsplashCacheState>({ items: [], activeIndex: 0 });
   const [loaded, setLoaded] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const autoAttemptRef = React.useRef('');
 
   React.useEffect(() => {
     loadExtensionValue<UnsplashCacheState>(UNSPLASH_CACHE_KEY, { items: [], activeIndex: 0 }).then((storedCache) => {
@@ -60,18 +61,23 @@ export function useUnsplashWallpapers(settings: Settings, enabled: boolean) {
       const next = trimCache({ items, activeIndex: existingIdx >= 0 ? existingIdx : items.length - 1, remaining, limit, queryKey });
       persistCache(next);
       setError('');
-    } catch {
-      setError('Unsplash refresh failed');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unsplash refresh failed. Try again.';
+      setError(message);
+      onError?.(message);
     } finally {
       setLoading(false);
     }
-  }, [cache, loading, persistCache, settings.unsplashApiKey, settings.unsplashQuery, trimCache]);
+  }, [cache, loading, onError, persistCache, settings.unsplashApiKey, settings.unsplashQuery, trimCache]);
 
   React.useEffect(() => {
     if (!loaded || !enabled || !settings.unsplashApiKey.trim() || loading) return;
-    if (cache.items.length > 0 && cache.queryKey === unsplashQueryKey(settings.unsplashQuery)) return;
+    const attemptKey = settings.unsplashApiKey.trim();
+    if (cache.items.length > 0) return;
+    if (autoAttemptRef.current === attemptKey) return;
+    autoAttemptRef.current = attemptKey;
     refresh();
-  }, [cache.items.length, cache.queryKey, enabled, loaded, loading, refresh, settings.unsplashApiKey, settings.unsplashQuery]);
+  }, [cache.items.length, enabled, loaded, loading, refresh, settings.unsplashApiKey]);
 
   React.useEffect(() => {
     if (!loaded) return;

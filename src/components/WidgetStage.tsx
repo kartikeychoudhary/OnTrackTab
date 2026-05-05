@@ -9,6 +9,7 @@ export function WidgetStage({
   settings,
   showWidgets,
   tweaks,
+  onError,
 }: {
   editMode: boolean;
   isGrid: boolean;
@@ -16,6 +17,7 @@ export function WidgetStage({
   settings: Settings;
   showWidgets: Record<WidgetId, boolean>;
   tweaks: Tweaks;
+  onError?: (message: string) => void;
 }) {
   if (isGrid) {
     return (
@@ -27,7 +29,7 @@ export function WidgetStage({
         items={[
           { id: 'search', node: <SearchWidget /> },
           { id: 'clock', node: <GridClock clockStyle={tweaks.clockStyle} /> },
-          { id: 'weather', node: <WeatherWidget locations={settings.weatherLocations} apiKey={settings.tomorrowApiKey} tempUnit={settings.tempUnit} /> },
+          { id: 'weather', node: <WeatherWidget locations={settings.weatherLocations} apiKey={settings.tomorrowApiKey} tempUnit={settings.tempUnit} onError={onError} /> },
           { id: 'calendar', node: <CalendarWidget holidays={settings.holidays} /> },
           { id: 'notes', node: <NotesWidget /> },
           { id: 'mostVisited', node: <MostVisitedWidget /> },
@@ -41,7 +43,7 @@ export function WidgetStage({
       {showWidgets.clock && tweaks.layout !== 'floating' && <div className="pos-clock"><ClockWidget style={tweaks.clockStyle} /></div>}
       {showWidgets.clock && tweaks.layout === 'floating' && tweaks.clockStyle === 'hero' && <div className="pos-clock"><ClockWidget style="hero" /></div>}
       {showWidgets.search && <div className="pos-search"><SearchWidget /></div>}
-      {showWidgets.weather && <div className="pos-weather"><WeatherWidget locations={settings.weatherLocations} apiKey={settings.tomorrowApiKey} tempUnit={settings.tempUnit} /></div>}
+      {showWidgets.weather && <div className="pos-weather"><WeatherWidget locations={settings.weatherLocations} apiKey={settings.tomorrowApiKey} tempUnit={settings.tempUnit} onError={onError} /></div>}
       {showWidgets.calendar && <div className="pos-calendar"><CalendarWidget holidays={settings.holidays} /></div>}
       {showWidgets.notes && <div className="pos-notes"><NotesWidget /></div>}
       {showWidgets.mostVisited && <div className="pos-mv"><MostVisitedWidget /></div>}

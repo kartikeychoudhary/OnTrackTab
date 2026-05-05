@@ -13,12 +13,19 @@ import { normalizeTweaks } from './lib/tweakMigration';
 import { renderWallpaper } from './lib/wallpaperRendering';
 import type { LikedWallpaper, RenderedWallpaper, Settings, Tweaks, WidgetId } from './types';
 
+type Toast = {
+  id: number;
+  message: string;
+  tone: 'success' | 'error';
+};
+
 export default function App() {
   const [tweaks, setTweaks] = useStoredState<Tweaks>('ott-tweaks', TWEAK_DEFAULTS);
   const [settings, setSettings] = useStoredState<Settings>('ott-settings', DEFAULT_SETTINGS);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [storedLikedWallpapers, setLikedWallpapers] = useStoredState<LikedWallpaper[]>('ott-liked-wallpapers', []);
   const [editMode, setEditMode] = React.useState(false);
+  const [toasts, setToasts] = React.useState<Toast[]>([]);
 
   const likedWallpapers = Array.isArray(storedLikedWallpapers) ? storedLikedWallpapers : [];
   const normalizedTweaks = React.useMemo(() => normalizeTweaks(tweaks), [tweaks]);
@@ -34,7 +41,14 @@ export default function App() {
   const wallpapers = React.useMemo<RenderedWallpaper[]>(() => WALLPAPER_BANK.map((wp) => ({ ...wp, ...renderWallpaper(wp) })), []);
   const generatedWallpaper = wallpapers.find((w) => w.id === activeTweaks.wallpaperId) || wallpapers[0];
   const background = settings.background;
-  const unsplash = useUnsplashWallpapers(settings, background.type === 'unsplash');
+  const showToast = React.useCallback((message: string, tone: Toast['tone'] = 'error') => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev.slice(-3), { id, message, tone }]);
+    window.setTimeout(() => setToasts((prev) => prev.filter((toast) => toast.id !== id)), 4200);
+  }, []);
+  const showErrorToast = React.useCallback((message: string) => showToast(message, 'error'), [showToast]);
+
+  const unsplash = useUnsplashWallpapers(settings, background.type === 'unsplash', showErrorToast);
   const isUnsplashBackground = background.type === 'unsplash';
   const customImageWallpaper = React.useMemo<RenderedWallpaper | null>(() => {
     if (background.type !== 'image' || !background.imageUrl) return null;
@@ -94,6 +108,26 @@ export default function App() {
     setSettingsOpen(false);
   };
 
+  const importLikedWallpapers = React.useCallback((incoming: LikedWallpaper[]) => {
+    const normalized = incoming.filter(isLikedWallpaper);
+    if (!normalized.length) {
+      showToast('No liked wallpapers found in that file.', 'error');
+      return;
+    }
+    let added = 0;
+    const seen = new Set(likedWallpapers.map(wallpaperHash));
+    const next = [...likedWallpapers];
+    normalized.forEach((wallpaper) => {
+      const hash = wallpaperHash(wallpaper);
+      if (seen.has(hash)) return;
+      seen.add(hash);
+      next.push(wallpaper);
+      added += 1;
+    });
+    setLikedWallpapers(next);
+    showToast(added ? `Imported ${added} liked wallpaper${added === 1 ? '' : 's'}.` : 'All imported wallpapers were already liked.', 'success');
+  }, [likedWallpapers, setLikedWallpapers, showToast]);
+
   return (
     <div className={`stage layout--${activeTweaks.layout} ${editMode && isGrid ? 'is-editing' : ''}`} data-theme={theme} style={stageStyle}>
       <StageBackground background={background} imageUrl={effectiveImageUrl} />
@@ -115,6 +149,7 @@ export default function App() {
           settings={settings}
           showWidgets={showWidgets}
           tweaks={activeTweaks}
+          onError={showErrorToast}
         />
         {!editMode && (
           <div className="pos-wp-credit">
@@ -127,6 +162,7 @@ export default function App() {
               onPrev={isUnsplashBackground ? unsplash.previousWallpaper : undefined}
               onRefresh={isUnsplashBackground ? unsplash.refresh : undefined}
               refreshDisabled={unsplash.loading || !settings.unsplashApiKey.trim()}
+              refreshLoading={unsplash.loading}
               remaining={isUnsplashBackground ? unsplash.cache.remaining : undefined}
               limit={isUnsplashBackground ? unsplash.cache.limit : undefined}
               cachePosition={isUnsplashBackground && unsplash.cache.items.length ? `${unsplash.cache.activeIndex + 1}/${unsplash.cache.items.length}` : undefined}
@@ -151,7 +187,11 @@ export default function App() {
         onTweakChange={setTweak}
         wallpaperBank={WALLPAPER_BANK}
         onClearUnsplashCache={unsplash.clearCache}
+        onExportLiked={() => exportLikedWallpapers(likedWallpapers, showToast)}
+        onImportLiked={importLikedWallpapers}
+        onNotify={showToast}
       />
+      <ToastStack toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((toast) => toast.id !== id))} />
     </div>
   );
 }
@@ -165,4 +205,48 @@ function getVisibleWidgets(tweaks: Tweaks, settings: Settings): Record<WidgetId,
     notes: tweaks.showNotes && settings.showWidgets.notes,
     mostVisited: tweaks.showMostVisited && settings.showWidgets.mostVisited,
   };
+}
+
+function isLikedWallpaper(value: unknown): value is LikedWallpaper {
+  if (!value || typeof value !== 'object') return false;
+  const wallpaper = value as LikedWallpaper;
+  return typeof wallpaper.id === 'string' && typeof wallpaper.name === 'string' && typeof wallpaper.dataUrl === 'string';
+}
+
+function wallpaperHash(wallpaper: LikedWallpaper) {
+  let hash = 5381;
+  const source = `${wallpaper.id}|${wallpaper.name}|${wallpaper.dataUrl}`;
+  for (let i = 0; i < source.length; i += 1) {
+    hash = ((hash << 5) + hash) ^ source.charCodeAt(i);
+  }
+  return String(hash >>> 0);
+}
+
+function exportLikedWallpapers(likedWallpapers: LikedWallpaper[], notify: (message: string, tone?: Toast['tone']) => void) {
+  try {
+    const payload = JSON.stringify({ app: 'OnTrackTab', version: 1, exportedAt: new Date().toISOString(), likedWallpapers }, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'ontracktab-liked-wallpapers.json';
+    anchor.click();
+    URL.revokeObjectURL(url);
+    notify(`Exported ${likedWallpapers.length} liked wallpaper${likedWallpapers.length === 1 ? '' : 's'}.`, 'success');
+  } catch {
+    notify('Could not export liked wallpapers.', 'error');
+  }
+}
+
+function ToastStack({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
+  if (!toasts.length) return null;
+  return (
+    <div className="toast-stack" role="status" aria-live="polite">
+      {toasts.map((toast) => (
+        <button key={toast.id} className="toast" data-tone={toast.tone} onClick={() => onDismiss(toast.id)}>
+          {toast.message}
+        </button>
+      ))}
+    </div>
+  );
 }

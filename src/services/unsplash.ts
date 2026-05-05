@@ -76,7 +76,11 @@ export async function fetchUnsplashWallpaper(accessKey: string, query: string): 
   if (selectedQuery) url.searchParams.set('query', selectedQuery);
 
   const res = await fetch(url.toString(), { headers: { Authorization: `Client-ID ${accessKey}` } });
-  if (!res.ok) throw new Error(`Unsplash returned ${res.status}`);
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) throw new Error('Unsplash access key is invalid. Update the key, then click refresh.');
+    if (res.status === 429) throw new Error('Unsplash rate limit reached. Try refreshing again later.');
+    throw new Error(`Unsplash refresh failed (${res.status}). Try again.`);
+  }
   const remaining = Number(res.headers.get('x-ratelimit-remaining') || NaN);
   const limit = Number(res.headers.get('x-ratelimit-limit') || NaN);
   const photo = await res.json() as {
