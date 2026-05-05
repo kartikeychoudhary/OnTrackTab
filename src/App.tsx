@@ -19,11 +19,13 @@ type Toast = {
   tone: 'success' | 'error';
 };
 
+const EMPTY_LIKED_WALLPAPERS: LikedWallpaper[] = [];
+
 export default function App() {
   const [tweaks, setTweaks] = useStoredState<Tweaks>('ott-tweaks', TWEAK_DEFAULTS);
   const [settings, setSettings] = useStoredState<Settings>('ott-settings', DEFAULT_SETTINGS);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
-  const [storedLikedWallpapers, setLikedWallpapers] = useStoredState<LikedWallpaper[]>('ott-liked-wallpapers', []);
+  const [storedLikedWallpapers, setLikedWallpapers] = useStoredState<LikedWallpaper[]>('ott-liked-wallpapers', EMPTY_LIKED_WALLPAPERS);
   const [editMode, setEditMode] = React.useState(false);
   const [toasts, setToasts] = React.useState<Toast[]>([]);
 

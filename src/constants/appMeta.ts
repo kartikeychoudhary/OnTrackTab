@@ -1,7 +1,7 @@
-export const APP_VERSION = '1.0.1';
+export const APP_VERSION = '1.0.2';
 
 export const RELEASE_NOTES = [
-  'Unsplash refresh now waits for explicit refresh after query edits and stops repeated invalid-key retries.',
-  'Error and saved-key feedback now appears as toast messages.',
-  'Liked wallpapers can be exported and imported with duplicate protection.',
+  'Liked wallpapers, notes, settings, and tweaks now stay in sync across open extension tabs.',
+  'Existing local data is migrated into Chrome extension storage automatically.',
+  'Weather cache now uses extension storage for more consistent refresh behavior.',
 ];

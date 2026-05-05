@@ -2,7 +2,7 @@
 
 ## Prepared Files
 
-- Extension upload ZIP: `store-assets/OnTrackTab-1.0.1.zip`
+- Extension upload ZIP: `store-assets/OnTrackTab-1.0.2.zip`
 - Store screenshots: `store-assets/screenshots/`
 - Small promotional image: `store-assets/promo/small-promo-440x280.png`
 - Extension icon: `public/icons/icon-128.png`
@@ -117,7 +117,7 @@ For first release, consider unchecking automatic publishing at submit time so th
 
 1. Open the Chrome Developer Dashboard.
 2. Click `Add new item`.
-3. Upload `store-assets/OnTrackTab-1.0.1.zip`.
+3. Upload `store-assets/OnTrackTab-1.0.2.zip`.
 4. Complete Store Listing using `docs/description.md` and `store-assets/`.
 5. Complete Privacy using the text above.
 6. Complete Distribution.

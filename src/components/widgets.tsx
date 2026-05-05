@@ -1,4 +1,6 @@
 import React from 'react';
+import { useStoredState } from '../hooks/useStoredState';
+import { loadExtensionValue, saveExtensionValue } from '../lib/extensionStorage';
 import type { CachedUnsplashWallpaper, LikedWallpaper, RenderedWallpaper } from '../types';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -288,22 +290,14 @@ function weatherCacheKey(location: string, tempUnit: 'C' | 'F') {
   return `ott-weather:${tempUnit}:${location.trim().toLowerCase()}`;
 }
 
-function readCachedWeather(location: string, tempUnit: 'C' | 'F') {
-  try {
-    const raw = localStorage.getItem(weatherCacheKey(location, tempUnit));
-    if (!raw) return null;
-    const cached = JSON.parse(raw) as WeatherData;
-    if (!cached.fetchedAt) return null;
-    return cached;
-  } catch {
-    return null;
-  }
+async function readCachedWeather(location: string, tempUnit: 'C' | 'F') {
+  const cached = await loadExtensionValue<WeatherData | null>(weatherCacheKey(location, tempUnit), null);
+  if (!cached?.fetchedAt) return null;
+  return cached;
 }
 
 function writeCachedWeather(location: string, tempUnit: 'C' | 'F', data: WeatherData) {
-  try {
-    localStorage.setItem(weatherCacheKey(location, tempUnit), JSON.stringify(data));
-  } catch {}
+  saveExtensionValue(weatherCacheKey(location, tempUnit), data);
 }
 
 function weatherCodeLabel(code?: number) {
@@ -354,13 +348,13 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
   const safeIdx = Math.min(activeIdx, list.length - 1);
   const loc = list[safeIdx];
   const fallback = WEATHER_DATA[loc] || WEATHER_DATA['San Francisco, CA'];
-  const [data, setData] = React.useState<WeatherData>(() => readCachedWeather(loc, tempUnit) || fallback);
+  const [data, setData] = React.useState<WeatherData>(fallback);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
 
   const loadWeather = React.useCallback(async (force = false) => {
     const key = apiKey.trim();
-    const cached = readCachedWeather(loc, tempUnit);
+    const cached = await readCachedWeather(loc, tempUnit);
     if (!force && cached && Date.now() - cached.fetchedAt! < WEATHER_CACHE_TTL) {
       setData({ ...cached, source: 'cache' });
       setError('');
@@ -464,8 +458,7 @@ function renderMarkdown(src: string) {
 
 export function NotesWidget() {
   const [editing, setEditing] = React.useState(false);
-  const [text, setText] = React.useState(() => localStorage.getItem('ott-notes') || DEFAULT_NOTES);
-  React.useEffect(() => localStorage.setItem('ott-notes', text), [text]);
+  const [text, setText] = useStoredState('ott-notes', DEFAULT_NOTES);
   return <div className="glass glass--lg notes"><div className="notes__head"><div className="notes__title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M9 13h6M9 17h4" /></svg>Notes</div><button className="notes__toggle" onClick={() => setEditing((e) => !e)}>{editing ? 'Preview' : 'Edit'}</button></div>{editing ? <textarea className="notes__editor" value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} autoFocus /> : <div className="notes__preview">{renderMarkdown(text)}</div>}<div className="notes__foot"><span>markdown</span><span>{text.split('\n').length} lines · saved locally</span></div></div>;
 }
 

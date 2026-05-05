@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OnTrackTab",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A calmer, local-first Chrome new tab page.",
   "icons": {
     "16": "icons/icon-16.png",

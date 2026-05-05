@@ -15,7 +15,7 @@ export function loadExtensionValue<T>(key: string, fallback: T): Promise<T> {
         resolve(fallback);
         return;
       }
-      resolve((items[key] as T) || fallback);
+      resolve(Object.prototype.hasOwnProperty.call(items, key) ? items[key] as T : fallback);
     });
   });
 }
