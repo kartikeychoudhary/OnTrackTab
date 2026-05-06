@@ -1,7 +1,7 @@
 import React from 'react';
-import { CalendarDays, Cloud, Download, Grid2X2, Image, Info, KeyRound, Search, SlidersHorizontal, Trash2, Upload, Video } from 'lucide-react';
+import { CalendarDays, Cloud, Download, Grid2X2, Image, Info, KeyRound, Minus, Plus, Search, SlidersHorizontal, Trash2, Upload, Video } from 'lucide-react';
 import { APP_VERSION, RELEASE_NOTES } from '../constants/appMeta';
-import type { BackgroundSettings, LikedWallpaper, Settings, Tweaks, Wallpaper, WidgetId } from '../types';
+import type { BackgroundSettings, LikedWallpaper, Settings, Tweaks, Wallpaper, WidgetId, WidgetSize } from '../types';
 
 export const DEFAULT_SETTINGS: Settings = {
   tomorrowApiKey: '',
@@ -26,6 +26,8 @@ const widgetLabels: Record<WidgetId, string> = {
   notes: 'Notes',
   mostVisited: 'Most visited',
 };
+
+const widgetSizeOptions: WidgetSize[] = ['small', 'medium', 'large', 'xl'];
 
 export function SettingsDialog({
   open,
@@ -139,10 +141,13 @@ export function SettingsDialog({
             {section === 'widgets' && (
               <div className="settings__section">
                 <div className="settings__group-title">Visible widgets</div>
-                <div className="settings__group-help">Toggle which widgets appear on the new tab.</div>
+                <div className="settings__group-help">Toggle which widgets appear on the new tab and size them in floating or bento layouts.</div>
                 {(Object.keys(widgetLabels) as WidgetId[]).map((k) => (
                   <Row key={k} label={widgetLabels[k]} desc={widgetDesc(k)}>
-                    <Toggle value={settings.showWidgets[k]} onChange={(v) => setWidget(k, v)} />
+                    <div className="settings__widget-controls">
+                      <Segmented value={tweaks.widgetSizes[k]} options={widgetSizeOptions} onChange={(v) => onTweakChange('widgetSizes', { ...tweaks.widgetSizes, [k]: v as WidgetSize })} />
+                      <Toggle value={settings.showWidgets[k]} onChange={(v) => setWidget(k, v)} />
+                    </div>
                   </Row>
                 ))}
               </div>
@@ -159,6 +164,14 @@ export function SettingsDialog({
                 <Row label="Glass saturation" desc={`${tweaks.glassSat}%`}>
                   <input className="settings__range" type="range" min={100} max={260} value={tweaks.glassSat} onChange={(e) => onTweakChange('glassSat', Number(e.target.value))} />
                 </Row>
+                <Row label="Magnification" desc="Changes the dashboard's effective browser zoom">
+                  <div className="settings__stepper" aria-label="Magnification">
+                    <button className="settings__icon-btn" onClick={() => onTweakChange('viewportZoom', Math.max(70, tweaks.viewportZoom - 5))} aria-label="Zoom out"><Minus size={14} /></button>
+                    <span className="settings__stepper-value">{tweaks.viewportZoom}%</span>
+                    <button className="settings__icon-btn" onClick={() => onTweakChange('viewportZoom', Math.min(140, tweaks.viewportZoom + 5))} aria-label="Zoom in"><Plus size={14} /></button>
+                  </div>
+                </Row>
+                <div className="settings__note">If widgets are overlapping, reduce the magnification accordingly.</div>
                 <Row label="Accent"><input className="settings__color" type="color" value={tweaks.accent} onChange={(e) => onTweakChange('accent', e.target.value)} /></Row>
               </div>
             )}
@@ -175,6 +188,7 @@ export function SettingsDialog({
                 {settings.background.type === 'unsplash' && (
                   <>
                     <div className="settings__group-help">Uses your Unsplash Access Key and keeps fetched images in extension storage so reloads do not request the same image again.</div>
+                    {!settings.unsplashApiKey.trim() && <div className="settings__warning"><Info size={13} /> Add an Unsplash Access Key in API Keys before Unsplash wallpapers can load.</div>}
                     <Row label="Query" desc="Comma-separated topics">
                       <input className="settings__input settings__input--compact" placeholder="nature, landscape, architecture" value={settings.unsplashQuery} onChange={(e) => set({ unsplashQuery: e.target.value })} />
                     </Row>
@@ -241,7 +255,7 @@ export function SettingsDialog({
               </div>
             )}
 
-            {section === 'search' && <div className="settings__section"><div className="settings__group-title">Default engine</div><Row label="Search engine"><Select value={settings.searchEngine} options={['Google', 'DuckDuckGo', 'Bing', 'Kagi'].map((v) => ({ value: v, label: v }))} onChange={(v) => set({ searchEngine: v })} /></Row><Row label="Keyboard shortcut"><kbd className="settings__kbd">/</kbd></Row></div>}
+            {section === 'search' && <div className="settings__section"><div className="settings__group-title">Default engine</div><Row label="Search engine"><Select value={settings.searchEngine} options={['Google', 'DuckDuckGo', 'Bing', 'Kagi'].map((v) => ({ value: v, label: v }))} onChange={(v) => set({ searchEngine: v })} /></Row><Row label="Bookmark shortcut"><kbd className="settings__kbd">/</kbd></Row><Row label="Engine shortcut"><kbd className="settings__kbd">.</kbd></Row></div>}
             {section === 'api' && <div className="settings__section"><div className="settings__group-title">Tomorrow.io</div><div className="settings__group-help">Paste your Tomorrow.io API key to enable live weather data.</div><input className="settings__input settings__input--mono" placeholder="Tomorrow.io API key" value={settings.tomorrowApiKey} type="password" onChange={(e) => set({ tomorrowApiKey: e.target.value })} onBlur={() => onNotify(settings.tomorrowApiKey.trim() ? 'Tomorrow.io API key saved locally.' : 'Tomorrow.io API key cleared.', 'success')} /><div className="settings__keyhint"><Info size={13} /> Create a free Tomorrow.io account, open the Weather API dashboard, then copy the default API key from the API Keys section and paste it here.</div><div className="settings__group-title" style={{ marginTop: 24 }}>Unsplash</div><div className="settings__group-help">Paste the Unsplash <b>Access Key</b>. The Secret Key is not needed for public wallpaper photos.</div><input className="settings__input settings__input--mono" placeholder="Unsplash Access Key / Client ID" value={settings.unsplashApiKey} type="password" onChange={(e) => set({ unsplashApiKey: e.target.value })} onBlur={() => onNotify(settings.unsplashApiKey.trim() ? 'Unsplash access key saved locally.' : 'Unsplash access key cleared.', 'success')} /><div className="settings__keyhint"><Info size={13} /> Create an Unsplash developer app, open its Keys section, copy the Access Key, then paste it here. Use the Background tab to select Unsplash.</div><div className="settings__keyhint">Keys and cached wallpapers are stored locally by the extension.</div></div>}
             {section === 'about' && <div className="settings__section"><div className="settings__about"><div className="settings__about-mark">OT</div><div className="settings__about-name">OnTrackTab</div><div className="settings__about-ver">Version {APP_VERSION} · May 2026</div><div className="settings__about-desc">A calmer new tab. Local-first, glass-light.</div></div><div className="settings__release"><div className="settings__group-title">Release notes</div><ul className="settings__release-list">{RELEASE_NOTES.map((note) => <li key={note}>{note}</li>)}</ul></div></div>}
           </div>
@@ -255,7 +269,7 @@ export function SettingsDialog({
 
 function widgetDesc(k: WidgetId) {
   return {
-    search: 'Bookmarks-first with Google fallback',
+    search: 'Bookmarks-first with selected engine fallback',
     clock: 'Time and date in the top hero area',
     weather: 'Current conditions for saved locations',
     calendar: 'Month grid with holidays and weekends',

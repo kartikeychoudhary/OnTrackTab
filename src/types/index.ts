@@ -3,6 +3,7 @@ export type WidgetId = 'search' | 'clock' | 'weather' | 'calendar' | 'notes' | '
 export type LayoutMode = 'grid' | 'floating' | 'bento';
 export type ClockStyle = 'minimal' | 'hero' | 'compact';
 export type BackgroundType = 'generated' | 'unsplash' | 'image' | 'video';
+export type WidgetSize = 'small' | 'medium' | 'large' | 'xl';
 
 export interface GridItemLayout {
   x: number;
@@ -16,6 +17,7 @@ export interface GridItemLayout {
 }
 
 export type GridLayoutMap = Record<WidgetId, GridItemLayout>;
+export type WidgetSizeMap = Record<WidgetId, WidgetSize>;
 
 export interface Wallpaper {
   id: string;
@@ -56,6 +58,8 @@ export interface Tweaks {
   gridLayout: GridLayoutMap;
   glassBlur: number;
   glassSat: number;
+  viewportZoom: number;
+  widgetSizes: WidgetSizeMap;
   accent: string;
   clockStyle: ClockStyle;
   showSearch: boolean;

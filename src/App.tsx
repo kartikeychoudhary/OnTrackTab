@@ -77,6 +77,7 @@ export default function App() {
     '--accent': activeTweaks.accent,
     '--blur': `${activeTweaks.glassBlur}px`,
     '--sat': `${activeTweaks.glassSat}%`,
+    '--viewport-magnification': activeTweaks.viewportZoom / 100,
     '--bg-dim': `${background.dim / 100}`,
   } as React.CSSProperties;
 

@@ -5,10 +5,10 @@ OnTrackTab is a calmer, local-first Chrome new tab extension built with React, T
 ## Features
 
 - Chrome new tab override using Manifest V3.
-- Bookmark-first search with Google fallback and `/` keyboard focus.
+- Bookmark-first search with selected-engine fallback, `/` bookmark focus, and `.` direct engine focus.
 - Clock, weather, calendar, notes, and most-visited widgets.
 - Grid layout mode with draggable and resizable widgets.
-- Floating and bento layout modes.
+- Floating and bento layout modes with magnification and widget size controls.
 - Generated canvas wallpapers, custom image/video backgrounds, and optional Unsplash wallpapers.
 - Local settings storage for layout, notes, liked wallpapers, API keys, and widget preferences.
 - Optional Tomorrow.io weather integration.

@@ -13,6 +13,8 @@ export const TWEAK_DEFAULTS: Tweaks = {
   },
   glassBlur: 30,
   glassSat: 180,
+  viewportZoom: 100,
+  widgetSizes: { search: 'medium', clock: 'medium', weather: 'medium', calendar: 'medium', notes: 'medium', mostVisited: 'medium' },
   accent: '#ff8a5b',
   clockStyle: 'minimal',
   showSearch: true,

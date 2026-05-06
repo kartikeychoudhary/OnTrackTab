@@ -6,15 +6,15 @@ Designed for people who want their browser start page to feel useful without fee
 
 ## Key Features
 
-- Bookmark-first search with Google fallback
-- Quick `/` keyboard shortcut to focus search
+- Bookmark-first search with selected search engine fallback
+- Quick `/` shortcut for bookmarks and `.` shortcut for direct search engine focus
 - Clock widget with multiple display styles
 - Weather widget with optional live Tomorrow.io data
 - Calendar widget with editable holiday entries
 - Local markdown notes
 - Most-visited sites from Chrome history/top sites
 - Draggable and resizable grid layout mode
-- Floating and bento layout options
+- Floating and bento layout options with magnification and widget size controls
 - Built-in generated wallpapers
 - Custom image and video backgrounds
 - Optional Unsplash wallpaper integration with local caching

@@ -67,6 +67,15 @@ function openUrl(url: string) {
   window.location.href = href;
 }
 
+function searchUrl(engine: string, term: string) {
+  const encoded = encodeURIComponent(term);
+  const normalized = engine.toLowerCase();
+  if (normalized === 'duckduckgo') return `https://duckduckgo.com/?q=${encoded}`;
+  if (normalized === 'bing') return `https://www.bing.com/search?q=${encoded}`;
+  if (normalized === 'kagi') return `https://kagi.com/search?q=${encoded}`;
+  return `https://www.google.com/search?q=${encoded}`;
+}
+
 function colorFromText(text: string) {
   let hash = 0;
   for (let i = 0; i < text.length; i += 1) hash = text.charCodeAt(i) + ((hash << 5) - hash);
@@ -184,8 +193,8 @@ async function getChromeRecentSites(): Promise<SiteVisit[]> {
   return MOST_VISITED;
 }
 
-export function SearchWidget() {
-  const [mode, setMode] = React.useState<'bookmarks' | 'google'>('bookmarks');
+export function SearchWidget({ searchEngine = 'Google' }: { searchEngine?: string }) {
+  const [mode, setMode] = React.useState<'bookmarks' | 'engine'>('bookmarks');
   const [q, setQ] = React.useState('');
   const [focused, setFocused] = React.useState(false);
   const [matches, setMatches] = React.useState<BookmarkMatch[]>([]);
@@ -196,6 +205,12 @@ export function SearchWidget() {
       const tag = (document.activeElement as HTMLElement | null)?.tagName;
       if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
         e.preventDefault();
+        setMode('bookmarks');
+        inputRef.current?.focus();
+      }
+      if (e.key === '.' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+        e.preventDefault();
+        setMode('engine');
         inputRef.current?.focus();
       }
     };
@@ -231,35 +246,35 @@ export function SearchWidget() {
       openUrl(matches[0].url);
       return;
     }
-    window.location.href = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
+    window.location.href = searchUrl(searchEngine, term);
   };
 
   return (
-    <div className="glass glass--lg search">
+    <div className={`glass glass--lg search ${focused && q.trim() ? 'is-open' : ''}`}>
       <div className="search__tabs" role="tablist">
-        {(['bookmarks', 'google'] as const).map((tab) => (
+        {(['bookmarks', 'engine'] as const).map((tab) => (
           <button key={tab} role="tab" aria-selected={mode === tab} className={`search__tab ${mode === tab ? 'is-active' : ''}`} onClick={() => setMode(tab)}>
             {tab === 'bookmarks' ? (
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
             ) : (
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" /></svg>
             )}
-            {tab === 'bookmarks' ? 'Bookmarks' : 'Google'}
+            {tab === 'bookmarks' ? 'Bookmarks' : searchEngine}
           </button>
         ))}
-        <span className="search__shortcut">press /</span>
+        <span className="search__shortcut">/ bookmarks · . {searchEngine}</span>
       </div>
       <div className="search__field">
         <svg className="search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" /></svg>
-        <input ref={inputRef} className="search__input" placeholder={mode === 'bookmarks' ? 'Search Chrome bookmarks, fall through to Google...' : 'Search Google...'} value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => setFocused(false), 150)} onKeyDown={(e) => { if (e.key === 'Enter') runSearch(); }} />
+        <input ref={inputRef} className="search__input" placeholder={mode === 'bookmarks' ? `Search Chrome bookmarks, fall through to ${searchEngine}...` : `Search ${searchEngine}...`} value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => setFocused(false), 150)} onKeyDown={(e) => { if (e.key === 'Enter') runSearch(); }} />
         {q && <button className="search__clear" onClick={() => setQ('')} aria-label="Clear"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12" /></svg></button>}
       </div>
       {focused && q.trim() && (
         <div className="search__results">
           {mode === 'bookmarks' && loadingBookmarks && <div className="search__empty">Searching Chrome bookmarks...</div>}
           {mode === 'bookmarks' && !loadingBookmarks && matches.length > 0 && <div className="search__group"><div className="search__group-label">Chrome bookmarks · {matches.length}</div>{matches.map((b) => <a key={b.url} className="search__result" href={b.url} onClick={(e) => { e.preventDefault(); openUrl(b.url); }}><span className="search__favicon" style={{ background: b.favicon }}>{b.title[0]}</span><span className="search__result-text"><span className="search__result-title">{b.title}</span><span className="search__result-url">{normalizedHost(b.url)}</span></span><span className="search__result-folder">{b.folder}</span></a>)}</div>}
-          {mode === 'bookmarks' && !loadingBookmarks && matches.length === 0 && <div className="search__empty">No Chrome bookmarks match — press <kbd>↵</kbd> to search Google instead</div>}
-          <button className="search__fallback" onMouseDown={(e) => e.preventDefault()} onClick={runSearch}><span className="search__fallback-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>Search Google for "<b>{q}</b>"</button>
+          {mode === 'bookmarks' && !loadingBookmarks && matches.length === 0 && <div className="search__empty">No Chrome bookmarks match — press <kbd>↵</kbd> to search {searchEngine} instead</div>}
+          <button className="search__fallback" onMouseDown={(e) => e.preventDefault()} onClick={runSearch}><span className="search__fallback-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>Search {searchEngine} for "<b>{q}</b>"</button>
         </div>
       )}
     </div>

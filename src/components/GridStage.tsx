@@ -5,7 +5,7 @@ import type { GridLayoutMap, WidgetId } from '../types';
 export const GRID_COLS = 36;
 const GRID_ROW_HEIGHT = 28;
 const GRID_MARGIN: [number, number] = [6, 6];
-const GRID_PADDING: [number, number] = [8, 12];
+const GRID_PADDING: [number, number] = [8, 0];
 
 export const DEFAULT_LAYOUT: GridLayoutMap = {
   search: { x: 9, y: 0, w: 18, h: 3, minW: 12, minH: 2, maxH: 6 },

@@ -1,6 +1,7 @@
+import type React from 'react';
 import { GridStage } from './GridStage';
 import { CalendarWidget, ClockWidget, MostVisitedWidget, NotesWidget, SearchWidget, WeatherWidget } from './widgets';
-import type { Settings, Tweaks, WidgetId } from '../types';
+import type { Settings, Tweaks, WidgetId, WidgetSize } from '../types';
 
 export function WidgetStage({
   editMode,
@@ -27,7 +28,7 @@ export function WidgetStage({
         onLayoutChange={onGridLayoutChange}
         visibility={showWidgets}
         items={[
-          { id: 'search', node: <SearchWidget /> },
+          { id: 'search', node: <SearchWidget searchEngine={settings.searchEngine} /> },
           { id: 'clock', node: <GridClock clockStyle={tweaks.clockStyle} /> },
           { id: 'weather', node: <WeatherWidget locations={settings.weatherLocations} apiKey={settings.tomorrowApiKey} tempUnit={settings.tempUnit} onError={onError} /> },
           { id: 'calendar', node: <CalendarWidget holidays={settings.holidays} /> },
@@ -40,15 +41,20 @@ export function WidgetStage({
 
   return (
     <>
-      {showWidgets.clock && tweaks.layout !== 'floating' && <div className="pos-clock"><ClockWidget style={tweaks.clockStyle} /></div>}
-      {showWidgets.clock && tweaks.layout === 'floating' && tweaks.clockStyle === 'hero' && <div className="pos-clock"><ClockWidget style="hero" /></div>}
-      {showWidgets.search && <div className="pos-search"><SearchWidget /></div>}
-      {showWidgets.weather && <div className="pos-weather"><WeatherWidget locations={settings.weatherLocations} apiKey={settings.tomorrowApiKey} tempUnit={settings.tempUnit} onError={onError} /></div>}
-      {showWidgets.calendar && <div className="pos-calendar"><CalendarWidget holidays={settings.holidays} /></div>}
-      {showWidgets.notes && <div className="pos-notes"><NotesWidget /></div>}
-      {showWidgets.mostVisited && <div className="pos-mv"><MostVisitedWidget /></div>}
+      {showWidgets.clock && tweaks.layout !== 'floating' && <WidgetShell id="clock" size={tweaks.widgetSizes.clock}><ClockWidget style={tweaks.clockStyle} /></WidgetShell>}
+      {showWidgets.clock && tweaks.layout === 'floating' && tweaks.clockStyle === 'hero' && <WidgetShell id="clock" size={tweaks.widgetSizes.clock}><ClockWidget style="hero" /></WidgetShell>}
+      {showWidgets.search && <WidgetShell id="search" size={tweaks.widgetSizes.search}><SearchWidget searchEngine={settings.searchEngine} /></WidgetShell>}
+      {showWidgets.weather && <WidgetShell id="weather" size={tweaks.widgetSizes.weather}><WeatherWidget locations={settings.weatherLocations} apiKey={settings.tomorrowApiKey} tempUnit={settings.tempUnit} onError={onError} /></WidgetShell>}
+      {showWidgets.calendar && <WidgetShell id="calendar" size={tweaks.widgetSizes.calendar}><CalendarWidget holidays={settings.holidays} /></WidgetShell>}
+      {showWidgets.notes && <WidgetShell id="notes" size={tweaks.widgetSizes.notes}><NotesWidget /></WidgetShell>}
+      {showWidgets.mostVisited && <WidgetShell id="mostVisited" size={tweaks.widgetSizes.mostVisited}><MostVisitedWidget /></WidgetShell>}
     </>
   );
+}
+
+function WidgetShell({ id, size, children }: { id: WidgetId; size: WidgetSize; children: React.ReactNode }) {
+  const className = id === 'mostVisited' ? 'pos-mv' : `pos-${id}`;
+  return <div className={`${className} widget-shell widget-shell--${size}`}>{children}</div>;
 }
 
 function GridClock({ clockStyle }: { clockStyle: Tweaks['clockStyle'] }) {
