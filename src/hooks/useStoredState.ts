@@ -38,10 +38,15 @@ export function useStoredState<T>(key: string, defaults: T) {
 
   React.useEffect(() => {
     let cancelled = false;
+    const initialSerialized = persistedRef.current;
     loadExtensionValue<T>(key, value).then((stored) => {
       if (cancelled) return;
       const hydrated = hydrateStoredState(defaults, stored);
       const serialized = JSON.stringify(hydrated);
+      if (serialized === initialSerialized) {
+        setLoaded(true);
+        return;
+      }
       persistedRef.current = serialized;
       setValue(hydrated);
       try {

@@ -1,7 +1,8 @@
 import React from 'react';
-import { useStoredState } from '../hooks/useStoredState';
+export { NotesWidget } from './NotesWidget';
 import { loadExtensionValue, saveExtensionValue } from '../lib/extensionStorage';
 import type { CachedUnsplashWallpaper, LikedWallpaper, RenderedWallpaper } from '../types';
+import { WeatherDetail } from './WeatherDetail';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -281,13 +282,21 @@ export function SearchWidget({ searchEngine = 'Google' }: { searchEngine?: strin
   );
 }
 
-interface WeatherData {
+export interface WeatherData {
   temp: number;
   feelsLike: number;
   cond: string;
   icon: string;
   humidity: number;
   wind: number;
+  windDirection?: number;
+  visibility?: number;
+  uvIndex?: number;
+  pressureSurfaceLevel?: number;
+  tempHigh?: number;
+  tempLow?: number;
+  sunriseTime?: string;
+  sunsetTime?: string;
   fetchedAt?: number;
   source: 'demo' | 'api' | 'cache';
 }
@@ -295,10 +304,10 @@ interface WeatherData {
 const WEATHER_CACHE_TTL = 30 * 60 * 1000;
 
 const WEATHER_DATA: Record<string, WeatherData> = {
-  'San Francisco, CA': { temp: 16, feelsLike: 16, cond: 'Partly Cloudy', icon: 'cloud-sun', humidity: 72, wind: 12, source: 'demo' },
-  'Tokyo, JP': { temp: 22, feelsLike: 23, cond: 'Clear', icon: 'sun', humidity: 58, wind: 8, source: 'demo' },
-  'Reykjavik, IS': { temp: 4, feelsLike: 1, cond: 'Light Snow', icon: 'snow', humidity: 82, wind: 24, source: 'demo' },
-  'Bangalore, IN': { temp: 28, feelsLike: 31, cond: 'Rain', icon: 'rain', humidity: 88, wind: 6, source: 'demo' },
+  'San Francisco, CA': { temp: 16, feelsLike: 16, cond: 'Partly Cloudy', icon: 'cloud-sun', humidity: 72, wind: 12, tempHigh: 19, tempLow: 12, sunriseTime: '06:15', sunsetTime: '20:08', source: 'demo' },
+  'Tokyo, JP': { temp: 22, feelsLike: 23, cond: 'Clear', icon: 'sun', humidity: 58, wind: 8, tempHigh: 25, tempLow: 18, sunriseTime: '05:02', sunsetTime: '18:45', source: 'demo' },
+  'Reykjavik, IS': { temp: 4, feelsLike: 1, cond: 'Light Snow', icon: 'snow', humidity: 82, wind: 24, tempHigh: 6, tempLow: 1, sunriseTime: '09:30', sunsetTime: '16:45', source: 'demo' },
+  'Bangalore, IN': { temp: 28, feelsLike: 31, cond: 'Rain', icon: 'rain', humidity: 88, wind: 6, tempHigh: 32, tempLow: 24, sunriseTime: '06:00', sunsetTime: '18:30', source: 'demo' },
 };
 
 function weatherCacheKey(location: string, tempUnit: 'C' | 'F') {
@@ -337,6 +346,37 @@ async function fetchTomorrowWeather(location: string, apiKey: string, tempUnit: 
   const json = await res.json() as { data?: { values?: Record<string, number> } };
   const values = json.data?.values || {};
   const code = weatherCodeLabel(values.weatherCode);
+
+  let tempHigh: number | undefined;
+  let tempLow: number | undefined;
+  let sunriseTime: string | undefined;
+  let sunsetTime: string | undefined;
+
+  try {
+    const forecastUrl = new URL('https://api.tomorrow.io/v4/weather/forecast');
+    forecastUrl.searchParams.set('location', location);
+    forecastUrl.searchParams.set('units', units);
+    forecastUrl.searchParams.set('apikey', apiKey);
+    forecastUrl.searchParams.set('timesteps', '1d');
+    const forecastRes = await fetch(forecastUrl.toString(), { headers: { accept: 'application/json' } });
+    if (forecastRes.ok) {
+      const forecastJson = await forecastRes.json() as { timelines?: { daily?: Array<{ values?: Record<string, number> }> } };
+      const daily = forecastJson.timelines?.daily?.[0]?.values;
+      if (daily) {
+        tempHigh = daily.temperatureMax != null ? Math.round(daily.temperatureMax) : undefined;
+        tempLow = daily.temperatureMin != null ? Math.round(daily.temperatureMin) : undefined;
+        if (daily.sunriseTime) {
+          const sr = new Date(daily.sunriseTime as unknown as string);
+          sunriseTime = sr.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        if (daily.sunsetTime) {
+          const ss = new Date(daily.sunsetTime as unknown as string);
+          sunsetTime = ss.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+      }
+    }
+  } catch { /* forecast fetch is optional, realtime is primary */ }
+
   return {
     temp: Math.round(values.temperature ?? 0),
     feelsLike: Math.round(values.temperatureApparent ?? values.temperature ?? 0),
@@ -344,6 +384,14 @@ async function fetchTomorrowWeather(location: string, apiKey: string, tempUnit: 
     icon: code.icon,
     humidity: Math.round(values.humidity ?? 0),
     wind: Math.round(values.windSpeed ?? 0),
+    windDirection: values.windDirection != null ? Math.round(values.windDirection) : undefined,
+    visibility: values.visibility != null ? Math.round(values.visibility) : undefined,
+    uvIndex: values.uvIndex != null ? Math.round(values.uvIndex) : undefined,
+    pressureSurfaceLevel: values.pressureSurfaceLevel != null ? Math.round(values.pressureSurfaceLevel) : undefined,
+    tempHigh,
+    tempLow,
+    sunriseTime,
+    sunsetTime,
     fetchedAt: Date.now(),
     source: 'api',
   };
@@ -366,6 +414,9 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
   const [data, setData] = React.useState<WeatherData>(fallback);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [detailOpen, setDetailOpen] = React.useState(false);
+  const [triggerRect, setTriggerRect] = React.useState<DOMRect | undefined>();
+  const weatherRef = React.useRef<HTMLDivElement>(null);
 
   const loadWeather = React.useCallback(async (force = false) => {
     const key = apiKey.trim();
@@ -408,7 +459,7 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
   const windUnit = tempUnit === 'F' ? 'mph' : 'km/h';
 
   return (
-    <div className="glass glass--lg weather">
+    <div className="glass glass--lg weather" ref={weatherRef}>
       <div className="weather__head">
         <div>
           <div className="weather__loc"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>{loc}</div>
@@ -418,9 +469,22 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-9-9M21 3v6h-6" /></svg>
         </button>
       </div>
-      <div className="weather__body"><div className="weather__icon"><WeatherIcon kind={data.icon} size={56} /></div><div className="weather__temp">{data.temp}<span className="weather__temp-unit">°{tempUnit}</span></div></div>
+      <div className="weather__body"><div className="weather__icon"><WeatherIcon kind={data.icon} size={56} /></div><div className="weather__temp-col"><div className="weather__temp">{data.temp}<span className="weather__temp-unit">°{tempUnit}</span></div>{(data.tempHigh != null && data.tempLow != null) && <div className="weather__hilow"><span className="weather__hilow-arrow">↑</span>{data.tempHigh}° <span className="weather__hilow-arrow">↓</span>{data.tempLow}°</div>}</div></div>
       <div className="weather__meta"><div className="weather__meta-item"><span className="weather__meta-label">Feels</span><span className="weather__meta-val">{data.feelsLike}°</span></div><div className="weather__meta-item"><span className="weather__meta-label">Humidity</span><span className="weather__meta-val">{data.humidity}%</span></div><div className="weather__meta-item"><span className="weather__meta-label">Wind</span><span className="weather__meta-val">{data.wind} {windUnit}</span></div></div>
+      <button className="weather__more" onClick={() => { setTriggerRect(weatherRef.current?.getBoundingClientRect()); setDetailOpen(true); }}>
+        More
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
       {list.length > 1 && <div className="weather__dots">{list.map((l, i) => <button key={l} className={`weather__dot ${i === safeIdx ? 'is-active' : ''}`} aria-label={l} onClick={() => setActiveIdx(i)} />)}</div>}
+      {detailOpen && (
+        <WeatherDetail
+          data={data}
+          location={loc}
+          tempUnit={tempUnit}
+          onClose={() => setDetailOpen(false)}
+          triggerRect={triggerRect}
+        />
+      )}
     </div>
   );
 }
@@ -452,29 +516,6 @@ export function CalendarWidget({ holidays }: { holidays: string }) {
   const nav = (delta: number) => setView((v) => ({ y: v.m + delta < 0 ? v.y - 1 : v.m + delta > 11 ? v.y + 1 : v.y, m: (v.m + delta + 12) % 12 }));
   const upcoming = Object.entries(holidayMap).map(([k, label]) => ({ k, label, m: Number(k.slice(0, 2)) - 1, d: Number(k.slice(3, 5)) })).filter((h) => h.m === view.m).sort((a, b) => a.d - b.d);
   return <div className="glass glass--lg calendar"><div className="calendar__head"><div><div className="calendar__month">{MONTHS[view.m]}</div><div className="calendar__year">{view.y}</div></div><div className="calendar__nav"><button onClick={() => nav(-1)} aria-label="Previous month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6" /></svg></button><button className="calendar__today-btn" onClick={() => setView({ y: today.getFullYear(), m: today.getMonth() })}>Today</button><button onClick={() => nav(1)} aria-label="Next month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6" /></svg></button></div></div><div className="calendar__grid">{DOW.map((d) => <div key={d} className={`calendar__dow ${d === 'Sat' || d === 'Sun' ? 'calendar__dow--weekend' : ''}`}>{d[0]}</div>)}{cells.map((c, i) => <div key={i} className={['calendar__cell', c.muted && 'calendar__cell--muted', c.isToday && 'calendar__cell--today', c.isWeekend && !c.muted && 'calendar__cell--weekend', c.holiday && 'calendar__cell--holiday'].filter(Boolean).join(' ')} title={c.holiday}><span className="calendar__day">{c.day}</span>{c.holiday && <span className="calendar__pip" />}</div>)}</div>{upcoming.length > 0 && <div className="calendar__holidays">{upcoming.slice(0, 2).map((h) => <div key={h.k} className="calendar__holiday"><span className="calendar__holiday-date">{MONTHS[h.m].slice(0, 3)} {h.d}</span><span className="calendar__holiday-name">{h.label}</span></div>)}</div>}</div>;
-}
-
-const DEFAULT_NOTES = `# Today
-- [x] Ship the OnTrackTab prototype
-- [ ] Review weather widget icons
-- [ ] Reply to **Sara** about Q2 plan`;
-
-function renderMarkdown(src: string) {
-  return src.split('\n').map((line, idx) => {
-    if (line.startsWith('# ')) return <h1 key={idx} className="md-h md-h1">{line.slice(2)}</h1>;
-    if (/^[-*]\s+\[( |x|X)\]\s+/.test(line)) {
-      const checked = /\[(x|X)\]/.test(line);
-      return <div key={idx} className={`md-todo ${checked ? 'is-checked' : ''}`}><span className={`md-check ${checked ? 'is-checked' : ''}`}>{checked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="m5 12 5 5L20 7" /></svg>}</span><span>{line.replace(/^[-*]\s+\[( |x|X)\]\s+/, '')}</span></div>;
-    }
-    if (line.trim() === '') return <div key={idx} className="md-spacer" />;
-    return <p key={idx} className="md-p">{line}</p>;
-  });
-}
-
-export function NotesWidget() {
-  const [editing, setEditing] = React.useState(false);
-  const [text, setText] = useStoredState('ott-notes', DEFAULT_NOTES);
-  return <div className="glass glass--lg notes"><div className="notes__head"><div className="notes__title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M9 13h6M9 17h4" /></svg>Notes</div><button className="notes__toggle" onClick={() => setEditing((e) => !e)}>{editing ? 'Preview' : 'Edit'}</button></div>{editing ? <textarea className="notes__editor" value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} autoFocus /> : <div className="notes__preview">{renderMarkdown(text)}</div>}<div className="notes__foot"><span>markdown</span><span>{text.split('\n').length} lines · saved locally</span></div></div>;
 }
 
 const MOST_VISITED = [

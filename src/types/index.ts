@@ -19,6 +19,19 @@ export interface GridItemLayout {
 export type GridLayoutMap = Record<WidgetId, GridItemLayout>;
 export type WidgetSizeMap = Record<WidgetId, WidgetSize>;
 
+export interface WidgetPosition {
+  top?: number;
+  left?: number;
+  right?: number;
+  bottom?: number;
+  centerH?: boolean;
+  centerV?: boolean;
+  offsetX?: number;
+  offsetY?: number;
+}
+
+export type WidgetPositionMap = Record<WidgetId, WidgetPosition>;
+
 export interface Wallpaper {
   id: string;
   name: string;
@@ -60,6 +73,7 @@ export interface Tweaks {
   glassSat: number;
   viewportZoom: number;
   widgetSizes: WidgetSizeMap;
+  widgetPositions: WidgetPositionMap;
   accent: string;
   clockStyle: ClockStyle;
   showSearch: boolean;
@@ -91,4 +105,30 @@ export interface Settings {
   startWeekOn: 'Sunday' | 'Monday';
   tempUnit: 'C' | 'F';
   background: BackgroundSettings;
+}
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExportPayload {
+  app: string;
+  version: string;
+  exportedAt: string;
+  tweaks: Tweaks;
+  settings: Settings;
+  likedWallpapers: LikedWallpaper[];
+  notes: Note[];
+}
+
+export interface EncryptedExport {
+  app: string;
+  version: string;
+  exportedAt: string;
+  encrypted: string;
+  salt: string;
 }

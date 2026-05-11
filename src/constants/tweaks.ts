@@ -1,4 +1,4 @@
-import type { Tweaks } from '../types';
+import type { Tweaks, WidgetPositionMap } from '../types';
 
 export const TWEAK_DEFAULTS: Tweaks = {
   wallpaperId: 'big-sur',
@@ -15,6 +15,14 @@ export const TWEAK_DEFAULTS: Tweaks = {
   glassSat: 180,
   viewportZoom: 100,
   widgetSizes: { search: 'medium', clock: 'medium', weather: 'medium', calendar: 'medium', notes: 'medium', mostVisited: 'medium' },
+  widgetPositions: {
+    clock: { top: 88, centerH: true },
+    search: { top: 220, centerH: true },
+    weather: { top: 88, right: 24 },
+    calendar: { bottom: 24, left: 24 },
+    notes: { right: 24, centerV: true, offsetY: -30 },
+    mostVisited: { bottom: 24, centerH: true },
+  },
   accent: '#ff8a5b',
   clockStyle: 'minimal',
   showSearch: true,

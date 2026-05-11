@@ -1,6 +1,15 @@
 import { DEFAULT_LAYOUT, GRID_COLS } from '../components/GridStage';
 import type { Tweaks } from '../types';
 
+const DEFAULT_WIDGET_POSITIONS: Tweaks['widgetPositions'] = {
+  clock: { top: 88, centerH: true },
+  search: { top: 220, centerH: true },
+  weather: { top: 88, right: 24 },
+  calendar: { bottom: 24, left: 24 },
+  notes: { right: 24, centerV: true, offsetY: -30 },
+  mostVisited: { bottom: 24, centerH: true },
+};
+
 export function normalizeTweaks(tweaks: Tweaks): Tweaks {
   const entries = Object.values(tweaks.gridLayout);
   const maxRight = Math.max(...entries.map((item) => item.x + item.w), 0);
@@ -34,7 +43,7 @@ export function normalizeTweaks(tweaks: Tweaks): Tweaks {
   const needsCalendarBounds = !calendarLayout || calendarLayout.h < 13 || (calendarLayout.minH || 0) < 10 || (calendarLayout.minW || 0) < 9;
   const needsColumnClamp = Object.values(scaledLayout).some((item) => item.x + item.w > GRID_COLS);
   const needsWidgetSizeDefaults = !tweaks.widgetSizes || Object.entries(widgetSizes).some(([id, size]) => tweaks.widgetSizes[id as keyof Tweaks['widgetSizes']] !== size);
-  const needsTweakDefaults = needsWidgetSizeDefaults || tweaks.viewportZoom !== viewportZoom;
+  const needsTweakDefaults = needsWidgetSizeDefaults || tweaks.viewportZoom !== viewportZoom || !tweaks.widgetPositions;
   if (!migrationScale && !needsSearchBounds && !needsCalendarBounds && !needsColumnClamp && !needsTweakDefaults) return tweaks;
 
   const nextLayout = Object.fromEntries(Object.entries(scaledLayout).map(([id, item]) => [id, {
@@ -49,6 +58,7 @@ export function normalizeTweaks(tweaks: Tweaks): Tweaks {
     ...tweaks,
     viewportZoom,
     widgetSizes,
+    widgetPositions: tweaks.widgetPositions || DEFAULT_WIDGET_POSITIONS,
     gridLayout: {
       ...nextLayout,
       search: {
