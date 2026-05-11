@@ -1,6 +1,7 @@
 import React from 'react';
-import { CalendarDays, Cloud, Database, Download, Grid2X2, Image, Info, KeyRound, Minus, Move, Plus, Search, SlidersHorizontal, Trash2, Upload, Video } from 'lucide-react';
+import { CalendarDays, Cloud, Database, Download, Grid2X2, Image, Info, KeyRound, Minus, Move, Plus, RotateCcw, Search, SlidersHorizontal, Trash2, Upload, Video } from 'lucide-react';
 import { APP_VERSION, RELEASE_NOTES } from '../constants/appMeta';
+import { TWEAK_DEFAULTS } from '../constants/tweaks';
 import type { BackgroundSettings, LikedWallpaper, Note, Settings, Tweaks, Wallpaper, WidgetId, WidgetPosition, WidgetSize } from '../types';
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -159,9 +160,16 @@ export function SettingsDialog({
                 <div className="settings__group-title">
                   Visible widgets
                   {tweaks.layout === 'floating' && (
-                    <button className="settings__pos-toggle" onClick={() => setShowPositions((v) => !v)} data-on={showPositions ? '1' : '0'}>
-                      <Move size={10} /> Positions
-                    </button>
+                    <div className="settings__pos-header">
+                      {showPositions && (
+                        <button className="settings__pos-reset" onClick={() => onTweakChange('widgetPositions', { ...TWEAK_DEFAULTS.widgetPositions })} title="Reset to defaults">
+                          <RotateCcw size={10} /> Reset
+                        </button>
+                      )}
+                      <button className="settings__pos-toggle" onClick={() => setShowPositions((v) => !v)} data-on={showPositions ? '1' : '0'}>
+                        <Move size={10} /> Positions
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div className="settings__group-help">Toggle which widgets appear on the new tab and size them in floating or bento layouts.</div>
