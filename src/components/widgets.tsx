@@ -2,6 +2,7 @@ import React from 'react';
 export { NotesWidget } from './NotesWidget';
 import { loadExtensionValue, saveExtensionValue } from '../lib/extensionStorage';
 import type { CachedUnsplashWallpaper, LikedWallpaper, RenderedWallpaper } from '../types';
+import { WeatherDetail } from './WeatherDetail';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -281,13 +282,17 @@ export function SearchWidget({ searchEngine = 'Google' }: { searchEngine?: strin
   );
 }
 
-interface WeatherData {
+export interface WeatherData {
   temp: number;
   feelsLike: number;
   cond: string;
   icon: string;
   humidity: number;
   wind: number;
+  windDirection?: number;
+  visibility?: number;
+  uvIndex?: number;
+  pressureSurfaceLevel?: number;
   fetchedAt?: number;
   source: 'demo' | 'api' | 'cache';
 }
@@ -344,6 +349,10 @@ async function fetchTomorrowWeather(location: string, apiKey: string, tempUnit: 
     icon: code.icon,
     humidity: Math.round(values.humidity ?? 0),
     wind: Math.round(values.windSpeed ?? 0),
+    windDirection: values.windDirection != null ? Math.round(values.windDirection) : undefined,
+    visibility: values.visibility != null ? Math.round(values.visibility) : undefined,
+    uvIndex: values.uvIndex != null ? Math.round(values.uvIndex) : undefined,
+    pressureSurfaceLevel: values.pressureSurfaceLevel != null ? Math.round(values.pressureSurfaceLevel) : undefined,
     fetchedAt: Date.now(),
     source: 'api',
   };
@@ -366,6 +375,7 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
   const [data, setData] = React.useState<WeatherData>(fallback);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [detailOpen, setDetailOpen] = React.useState(false);
 
   const loadWeather = React.useCallback(async (force = false) => {
     const key = apiKey.trim();
@@ -420,7 +430,19 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
       </div>
       <div className="weather__body"><div className="weather__icon"><WeatherIcon kind={data.icon} size={56} /></div><div className="weather__temp">{data.temp}<span className="weather__temp-unit">°{tempUnit}</span></div></div>
       <div className="weather__meta"><div className="weather__meta-item"><span className="weather__meta-label">Feels</span><span className="weather__meta-val">{data.feelsLike}°</span></div><div className="weather__meta-item"><span className="weather__meta-label">Humidity</span><span className="weather__meta-val">{data.humidity}%</span></div><div className="weather__meta-item"><span className="weather__meta-label">Wind</span><span className="weather__meta-val">{data.wind} {windUnit}</span></div></div>
+      <button className="weather__more" onClick={() => setDetailOpen(true)}>
+        More
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
       {list.length > 1 && <div className="weather__dots">{list.map((l, i) => <button key={l} className={`weather__dot ${i === safeIdx ? 'is-active' : ''}`} aria-label={l} onClick={() => setActiveIdx(i)} />)}</div>}
+      {detailOpen && (
+        <WeatherDetail
+          data={data}
+          location={loc}
+          tempUnit={tempUnit}
+          onClose={() => setDetailOpen(false)}
+        />
+      )}
     </div>
   );
 }

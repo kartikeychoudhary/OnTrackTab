@@ -1829,3 +1829,38 @@ button { font-family: inherit; }
 .md-content th, .md-content td { border: 1px solid var(--glass-border); padding: 4px 8px; text-align: left; }
 .md-content th { background: var(--glass-bg); font-weight: 600; }
 .md-content img { max-width: 100%; border-radius: 8px; }
+
+/* ── Weather detail modal ── */
+.weather__more {
+  display: flex; align-items: center; gap: 4px; margin-top: 8px; padding: 4px 0;
+  background: none; border: none; color: var(--accent); font-size: 11px; cursor: pointer;
+  opacity: 0.7; transition: opacity 0.12s;
+}
+.weather__more:hover { opacity: 1; }
+
+.weather-detail-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.weather-detail {
+  background: var(--glass-bg-strong); backdrop-filter: blur(var(--blur, 20px)) saturate(var(--sat, 150%));
+  border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px;
+  max-width: 340px; width: 90vw; color: var(--fg);
+}
+.weather-detail__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.weather-detail__location { font-size: 13px; font-weight: 600; }
+.weather-detail__close {
+  width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--glass-border);
+  background: transparent; color: var(--fg); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; opacity: 0.6;
+}
+.weather-detail__close:hover { opacity: 1; }
+.weather-detail__temp { font-size: 40px; font-weight: 200; line-height: 1; }
+.weather-detail__unit { font-size: 20px; font-weight: 400; vertical-align: super; margin-left: 2px; opacity: 0.6; }
+.weather-detail__cond { font-size: 13px; color: var(--fg-soft); margin: 4px 0 16px; }
+.weather-detail__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.weather-detail__item { background: var(--glass-bg); border-radius: 10px; padding: 10px 12px; }
+.weather-detail__item-label { font-size: 10px; color: var(--fg-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.weather-detail__item-value { font-size: 14px; font-weight: 600; }
+.weather-detail__footer { margin-top: 16px; font-size: 10px; color: var(--fg-soft); text-align: center; }
