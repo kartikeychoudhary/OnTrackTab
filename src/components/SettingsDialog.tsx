@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarDays, Cloud, Database, Download, Grid2X2, Image, Info, KeyRound, Minus, Plus, Search, SlidersHorizontal, Trash2, Upload, Video } from 'lucide-react';
+import { CalendarDays, Cloud, Database, Download, Grid2X2, Image, Info, KeyRound, Minus, Move, Plus, Search, SlidersHorizontal, Trash2, Upload, Video } from 'lucide-react';
 import { APP_VERSION, RELEASE_NOTES } from '../constants/appMeta';
 import type { BackgroundSettings, LikedWallpaper, Note, Settings, Tweaks, Wallpaper, WidgetId, WidgetPosition, WidgetSize } from '../types';
 
@@ -160,7 +160,7 @@ export function SettingsDialog({
                   Visible widgets
                   {tweaks.layout === 'floating' && (
                     <button className="settings__pos-toggle" onClick={() => setShowPositions((v) => !v)} data-on={showPositions ? '1' : '0'}>
-                      Positions
+                      <Move size={10} /> Positions
                     </button>
                   )}
                 </div>
