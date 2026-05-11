@@ -469,8 +469,7 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-9-9M21 3v6h-6" /></svg>
         </button>
       </div>
-      <div className="weather__body"><div className="weather__icon"><WeatherIcon kind={data.icon} size={56} /></div><div className="weather__temp">{data.temp}<span className="weather__temp-unit">°{tempUnit}</span></div></div>
-      {(data.tempHigh != null && data.tempLow != null) && <div className="weather__hilow"><span className="weather__hilow-arrow">↑</span>{data.tempHigh}° <span className="weather__hilow-arrow">↓</span>{data.tempLow}°</div>}
+      <div className="weather__body"><div className="weather__icon"><WeatherIcon kind={data.icon} size={56} /></div><div className="weather__temp-col"><div className="weather__temp">{data.temp}<span className="weather__temp-unit">°{tempUnit}</span></div>{(data.tempHigh != null && data.tempLow != null) && <div className="weather__hilow"><span className="weather__hilow-arrow">↑</span>{data.tempHigh}° <span className="weather__hilow-arrow">↓</span>{data.tempLow}°</div>}</div></div>
       <div className="weather__meta"><div className="weather__meta-item"><span className="weather__meta-label">Feels</span><span className="weather__meta-val">{data.feelsLike}°</span></div><div className="weather__meta-item"><span className="weather__meta-label">Humidity</span><span className="weather__meta-val">{data.humidity}%</span></div><div className="weather__meta-item"><span className="weather__meta-label">Wind</span><span className="weather__meta-val">{data.wind} {windUnit}</span></div></div>
       <button className="weather__more" onClick={() => { setTriggerRect(weatherRef.current?.getBoundingClientRect()); setDetailOpen(true); }}>
         More
