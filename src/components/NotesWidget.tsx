@@ -261,7 +261,7 @@ export function NotesWidget() {
         </button>
         <button
           className="notes__action-btn notes__action-btn--primary"
-          onClick={() => saveNote(activeNote)}
+          onClick={() => saveNote({ ...activeNote, content })}
           title="Save note"
           aria-label="Save note"
         >
