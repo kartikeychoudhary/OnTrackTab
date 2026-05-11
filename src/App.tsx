@@ -6,6 +6,7 @@ import { Topbar } from './components/Topbar';
 import { WidgetStage } from './components/WidgetStage';
 import { WallpaperCredit } from './components/widgets';
 import { WALLPAPER_BANK } from './components/wallpapers';
+import { APP_VERSION } from './constants/appMeta';
 import { TWEAK_DEFAULTS } from './constants/tweaks';
 import { useStoredState } from './hooks/useStoredState';
 import { useUnsplashWallpapers } from './hooks/useUnsplashWallpapers';
@@ -116,7 +117,7 @@ export default function App() {
   const exportAllData = React.useCallback(async (password: string) => {
     const payload: ExportPayload = {
       app: 'OnTrackTab',
-      version: '1.0.4',
+      version: APP_VERSION,
       exportedAt: new Date().toISOString(),
       tweaks,
       settings,
@@ -127,7 +128,7 @@ export default function App() {
     const { encrypted, salt } = await encryptPayload(json, password);
     const container = JSON.stringify({
       app: 'OnTrackTab',
-      version: '1.0.4',
+      version: APP_VERSION,
       exportedAt: new Date().toISOString(),
       encrypted,
       salt,
