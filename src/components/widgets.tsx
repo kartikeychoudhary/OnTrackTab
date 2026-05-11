@@ -470,7 +470,7 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
         </button>
       </div>
       <div className="weather__body"><div className="weather__icon"><WeatherIcon kind={data.icon} size={56} /></div><div className="weather__temp">{data.temp}<span className="weather__temp-unit">°{tempUnit}</span></div></div>
-      {(data.tempHigh != null && data.tempLow != null) && <div className="weather__hilow">H:{data.tempHigh}° L:{data.tempLow}°</div>}
+      {(data.tempHigh != null && data.tempLow != null) && <div className="weather__hilow"><span className="weather__hilow-arrow">↑</span>{data.tempHigh}° <span className="weather__hilow-arrow">↓</span>{data.tempLow}°</div>}
       <div className="weather__meta"><div className="weather__meta-item"><span className="weather__meta-label">Feels</span><span className="weather__meta-val">{data.feelsLike}°</span></div><div className="weather__meta-item"><span className="weather__meta-label">Humidity</span><span className="weather__meta-val">{data.humidity}%</span></div><div className="weather__meta-item"><span className="weather__meta-label">Wind</span><span className="weather__meta-val">{data.wind} {windUnit}</span></div></div>
       <button className="weather__more" onClick={() => { setTriggerRect(weatherRef.current?.getBoundingClientRect()); setDetailOpen(true); }}>
         More

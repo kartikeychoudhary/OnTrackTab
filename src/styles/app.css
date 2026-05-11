@@ -461,8 +461,9 @@ button { font-family: inherit; }
   font-variant-numeric: tabular-nums;
 }
 .weather__hilow {
-  font-size: 11px; color: var(--fg-soft); text-align: center; margin-top: 4px; font-variant-numeric: tabular-nums;
+  font-size: 11px; color: var(--fg-soft); text-align: center; margin-top: 4px; font-variant-numeric: tabular-nums; letter-spacing: 0.5px;
 }
+.weather__hilow-arrow { font-size: 9px; opacity: 0.5; }
 .weather__dots {
   display: flex; gap: 5px;
   margin-top: 10px; justify-content: center;
