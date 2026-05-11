@@ -11,7 +11,8 @@ import { useStoredState } from './hooks/useStoredState';
 import { useUnsplashWallpapers } from './hooks/useUnsplashWallpapers';
 import { normalizeTweaks } from './lib/tweakMigration';
 import { renderWallpaper } from './lib/wallpaperRendering';
-import type { LikedWallpaper, RenderedWallpaper, Settings, Tweaks, WidgetId } from './types';
+import { encryptPayload, decryptPayload } from './lib/encryption';
+import type { ExportPayload, LikedWallpaper, Note, RenderedWallpaper, Settings, Tweaks, WidgetId } from './types';
 
 type Toast = {
   id: number;
@@ -27,6 +28,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [storedLikedWallpapers, setLikedWallpapers] = useStoredState<LikedWallpaper[]>('ott-liked-wallpapers', EMPTY_LIKED_WALLPAPERS);
   const [editMode, setEditMode] = React.useState(false);
+  const [notes, setNotes] = useStoredState<Note[]>('ott-notes-v2', []);
   const [toasts, setToasts] = React.useState<Toast[]>([]);
 
   const likedWallpapers = Array.isArray(storedLikedWallpapers) ? storedLikedWallpapers : [];
@@ -111,25 +113,84 @@ export default function App() {
     setSettingsOpen(false);
   };
 
-  const importLikedWallpapers = React.useCallback((incoming: LikedWallpaper[]) => {
-    const normalized = incoming.filter(isLikedWallpaper);
-    if (!normalized.length) {
-      showToast('No liked wallpapers found in that file.', 'error');
-      return;
-    }
-    let added = 0;
-    const seen = new Set(likedWallpapers.map(wallpaperHash));
-    const next = [...likedWallpapers];
-    normalized.forEach((wallpaper) => {
-      const hash = wallpaperHash(wallpaper);
-      if (seen.has(hash)) return;
-      seen.add(hash);
-      next.push(wallpaper);
-      added += 1;
+  const exportAllData = React.useCallback(async (password: string) => {
+    const payload: ExportPayload = {
+      app: 'OnTrackTab',
+      version: '1.0.4',
+      exportedAt: new Date().toISOString(),
+      tweaks,
+      settings,
+      likedWallpapers,
+      notes,
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const { encrypted, salt } = await encryptPayload(json, password);
+    const container = JSON.stringify({
+      app: 'OnTrackTab',
+      version: '1.0.4',
+      exportedAt: new Date().toISOString(),
+      encrypted,
+      salt,
+    }, null, 2);
+    const blob = new Blob([container], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `ontracktab-backup-${new Date().toISOString().slice(0, 10)}.ottdata`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [tweaks, settings, likedWallpapers, notes]);
+
+  const importAllData = React.useCallback(async (file: File, password: string) => {
+    const text = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsText(file);
     });
-    setLikedWallpapers(next);
-    showToast(added ? `Imported ${added} liked wallpaper${added === 1 ? '' : 's'}.` : 'All imported wallpapers were already liked.', 'success');
-  }, [likedWallpapers, setLikedWallpapers, showToast]);
+
+    const container = JSON.parse(text);
+    if (!container.encrypted || !container.salt) {
+      throw new Error('Invalid export file format');
+    }
+
+    const decrypted = await decryptPayload(container.encrypted, password, container.salt);
+    const payload: ExportPayload = JSON.parse(decrypted);
+
+    if (payload.tweaks) setTweaks((prev) => ({ ...prev, ...payload.tweaks }));
+    if (payload.settings) setSettings((prev) => ({ ...prev, ...payload.settings }));
+
+    if (payload.likedWallpapers?.length) {
+      setLikedWallpapers((prev) => {
+        const next = [...prev];
+        const seen = new Set(prev.map((w) => `${w.id}|${w.name}|${w.dataUrl}`));
+        payload.likedWallpapers.forEach((w) => {
+          const key = `${w.id}|${w.name}|${w.dataUrl}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            next.push(w);
+          }
+        });
+        return next;
+      });
+    }
+
+    if (payload.notes?.length) {
+      setNotes((prev) => {
+        const next = [...prev];
+        const seenIds = new Set(prev.map((n) => n.id));
+        payload.notes.forEach((n) => {
+          if (!seenIds.has(n.id)) {
+            seenIds.add(n.id);
+            next.push(n);
+          }
+        });
+        return next;
+      });
+    }
+
+    showToast('All data imported successfully.', 'success');
+  }, [setTweaks, setSettings, setLikedWallpapers, setNotes, showToast]);
 
   return (
     <div className={`stage layout--${activeTweaks.layout} ${editMode && isGrid ? 'is-editing' : ''}`} data-theme={theme} style={stageStyle}>
@@ -190,9 +251,10 @@ export default function App() {
         onTweakChange={setTweak}
         wallpaperBank={WALLPAPER_BANK}
         onClearUnsplashCache={unsplash.clearCache}
-        onExportLiked={() => exportLikedWallpapers(likedWallpapers, showToast)}
-        onImportLiked={importLikedWallpapers}
+        onExportAll={exportAllData}
+        onImportAll={importAllData}
         onNotify={showToast}
+        notes={notes}
       />
       <ToastStack toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((toast) => toast.id !== id))} />
     </div>
@@ -208,37 +270,6 @@ function getVisibleWidgets(tweaks: Tweaks, settings: Settings): Record<WidgetId,
     notes: tweaks.showNotes && settings.showWidgets.notes,
     mostVisited: tweaks.showMostVisited && settings.showWidgets.mostVisited,
   };
-}
-
-function isLikedWallpaper(value: unknown): value is LikedWallpaper {
-  if (!value || typeof value !== 'object') return false;
-  const wallpaper = value as LikedWallpaper;
-  return typeof wallpaper.id === 'string' && typeof wallpaper.name === 'string' && typeof wallpaper.dataUrl === 'string';
-}
-
-function wallpaperHash(wallpaper: LikedWallpaper) {
-  let hash = 5381;
-  const source = `${wallpaper.id}|${wallpaper.name}|${wallpaper.dataUrl}`;
-  for (let i = 0; i < source.length; i += 1) {
-    hash = ((hash << 5) + hash) ^ source.charCodeAt(i);
-  }
-  return String(hash >>> 0);
-}
-
-function exportLikedWallpapers(likedWallpapers: LikedWallpaper[], notify: (message: string, tone?: Toast['tone']) => void) {
-  try {
-    const payload = JSON.stringify({ app: 'OnTrackTab', version: 1, exportedAt: new Date().toISOString(), likedWallpapers }, null, 2);
-    const blob = new Blob([payload], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = 'ontracktab-liked-wallpapers.json';
-    anchor.click();
-    URL.revokeObjectURL(url);
-    notify(`Exported ${likedWallpapers.length} liked wallpaper${likedWallpapers.length === 1 ? '' : 's'}.`, 'success');
-  } catch {
-    notify('Could not export liked wallpapers.', 'error');
-  }
 }
 
 function ToastStack({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {

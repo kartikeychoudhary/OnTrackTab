@@ -1,7 +1,7 @@
 import React from 'react';
-import { CalendarDays, Cloud, Download, Grid2X2, Image, Info, KeyRound, Minus, Plus, Search, SlidersHorizontal, Trash2, Upload, Video } from 'lucide-react';
+import { CalendarDays, Cloud, Database, Download, Grid2X2, Image, Info, KeyRound, Minus, Plus, Search, SlidersHorizontal, Trash2, Upload, Video } from 'lucide-react';
 import { APP_VERSION, RELEASE_NOTES } from '../constants/appMeta';
-import type { BackgroundSettings, LikedWallpaper, Settings, Tweaks, Wallpaper, WidgetId, WidgetSize } from '../types';
+import type { BackgroundSettings, LikedWallpaper, Note, Settings, Tweaks, Wallpaper, WidgetId, WidgetSize } from '../types';
 
 export const DEFAULT_SETTINGS: Settings = {
   tomorrowApiKey: '',
@@ -41,9 +41,10 @@ export function SettingsDialog({
   onTweakChange,
   wallpaperBank,
   onClearUnsplashCache,
-  onExportLiked,
-  onImportLiked,
+  onExportAll,
+  onImportAll,
   onNotify,
+  notes,
 }: {
   open: boolean;
   onClose: () => void;
@@ -56,14 +57,19 @@ export function SettingsDialog({
   onTweakChange: <K extends keyof Tweaks>(key: K, value: Tweaks[K]) => void;
   wallpaperBank: Wallpaper[];
   onClearUnsplashCache: () => void;
-  onExportLiked: () => void;
-  onImportLiked: (wallpapers: LikedWallpaper[]) => void;
+  onExportAll: (password: string) => Promise<void>;
+  onImportAll: (file: File, password: string) => Promise<void>;
   onNotify: (message: string, tone?: 'success' | 'error') => void;
+  notes: Note[];
 }) {
   const [section, setSection] = React.useState('widgets');
   const [newLoc, setNewLoc] = React.useState('');
-  const importInputRef = React.useRef<HTMLInputElement>(null);
   const videoInputRef = React.useRef<HTMLInputElement>(null);
+  const [exportPassword, setExportPassword] = React.useState('');
+  const [importPassword, setImportPassword] = React.useState('');
+  const [exportLoading, setExportLoading] = React.useState(false);
+  const [importLoading, setImportLoading] = React.useState(false);
+  const importDataRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (!open) return undefined;
@@ -83,26 +89,33 @@ export function SettingsDialog({
     setNewLoc('');
   };
 
-  const handleImportFile = (file: File | undefined) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result)) as { likedWallpapers?: LikedWallpaper[] } | LikedWallpaper[];
-        const wallpapers = Array.isArray(parsed) ? parsed : parsed.likedWallpapers;
-        if (!Array.isArray(wallpapers)) throw new Error('Invalid import');
-        onImportLiked(wallpapers);
-      } catch {
-        onNotify('Could not import liked wallpapers. Choose a valid OnTrackTab export file.', 'error');
-      } finally {
-        if (importInputRef.current) importInputRef.current.value = '';
-      }
-    };
-    reader.onerror = () => {
-      onNotify('Could not read that import file.', 'error');
-      if (importInputRef.current) importInputRef.current.value = '';
-    };
-    reader.readAsText(file);
+  const handleExportAll = async () => {
+    if (!exportPassword.trim()) return;
+    setExportLoading(true);
+    try {
+      await onExportAll(exportPassword);
+      onNotify('Data exported and encrypted successfully.', 'success');
+    } catch {
+      onNotify('Export failed. Please try again.', 'error');
+    } finally {
+      setExportLoading(false);
+      setExportPassword('');
+    }
+  };
+
+  const handleImportAll = async (file: File) => {
+    if (!importPassword.trim()) return;
+    setImportLoading(true);
+    try {
+      await onImportAll(file, importPassword);
+      onNotify('Data imported and decrypted successfully.', 'success');
+    } catch {
+      onNotify('Import failed. Check password and file format.', 'error');
+    } finally {
+      setImportLoading(false);
+      setImportPassword('');
+      if (importDataRef.current) importDataRef.current.value = '';
+    }
   };
 
   const sections = [
@@ -114,6 +127,7 @@ export function SettingsDialog({
     { id: 'calendar', label: 'Calendar', icon: CalendarDays },
     { id: 'search', label: 'Search', icon: Search },
     { id: 'api', label: 'API Keys', icon: KeyRound },
+    { id: 'data', label: 'Data', icon: Database },
     { id: 'about', label: 'About', icon: Info },
   ];
 
@@ -250,11 +264,6 @@ export function SettingsDialog({
                   <Select value={String(settings.wallpaperRotateMinutes)} options={['0:Never', '5:5 min', '15:15 min', '30:30 min', '60:1 hour', '360:6 hours', '1440:Daily'].map((x) => { const [value, label] = x.split(':'); return { value, label }; })} onChange={(v) => set({ wallpaperRotateMinutes: Number(v) })} />
                 </Row>
                 <div className="settings__group-title" style={{ marginTop: 28 }}>Liked wallpapers</div>
-                <div className="settings__toolbar">
-                  <button className="settings__btn" onClick={onExportLiked}><Download size={14} />Export</button>
-                  <button className="settings__btn" onClick={() => importInputRef.current?.click()}><Upload size={14} />Import</button>
-                  <input ref={importInputRef} className="settings__file" type="file" accept="application/json,.json" onChange={(e) => handleImportFile(e.target.files?.[0])} />
-                </div>
                 {likedWallpapers.length === 0 ? <div className="settings__empty">Tap the heart icon under any wallpaper to save it here.</div> : <div className="settings__wp-grid">{likedWallpapers.map((wp) => <div key={wp.id} className="settings__wp"><button className="settings__wp-thumb" style={{ backgroundImage: `url(${wp.dataUrl})` }} onClick={() => onUseLiked(wp)}><span className="settings__wp-pin">Pin</span></button><div className="settings__wp-name">{wp.name}</div><button className="settings__wp-x" onClick={() => onUnlike(wp.id)} aria-label="Remove">×</button></div>)}</div>}
               </div>
             )}
@@ -280,6 +289,71 @@ export function SettingsDialog({
 
             {section === 'search' && <div className="settings__section"><div className="settings__group-title">Default engine</div><Row label="Search engine"><Select value={settings.searchEngine} options={['Google', 'DuckDuckGo', 'Bing', 'Kagi'].map((v) => ({ value: v, label: v }))} onChange={(v) => set({ searchEngine: v })} /></Row><Row label="Bookmark shortcut"><kbd className="settings__kbd">/</kbd></Row><Row label="Engine shortcut"><kbd className="settings__kbd">.</kbd></Row></div>}
             {section === 'api' && <div className="settings__section"><div className="settings__group-title">Tomorrow.io</div><div className="settings__group-help">Paste your Tomorrow.io API key to enable live weather data.</div><input className="settings__input settings__input--mono" placeholder="Tomorrow.io API key" value={settings.tomorrowApiKey} type="password" onChange={(e) => set({ tomorrowApiKey: e.target.value })} onBlur={() => onNotify(settings.tomorrowApiKey.trim() ? 'Tomorrow.io API key saved locally.' : 'Tomorrow.io API key cleared.', 'success')} /><div className="settings__keyhint"><Info size={13} /> Create a free Tomorrow.io account, open the Weather API dashboard, then copy the default API key from the API Keys section and paste it here.</div><div className="settings__group-title" style={{ marginTop: 24 }}>Unsplash</div><div className="settings__group-help">Paste the Unsplash <b>Access Key</b>. The Secret Key is not needed for public wallpaper photos.</div><input className="settings__input settings__input--mono" placeholder="Unsplash Access Key / Client ID" value={settings.unsplashApiKey} type="password" onChange={(e) => set({ unsplashApiKey: e.target.value })} onBlur={() => onNotify(settings.unsplashApiKey.trim() ? 'Unsplash access key saved locally.' : 'Unsplash access key cleared.', 'success')} /><div className="settings__keyhint"><Info size={13} /> Create an Unsplash developer app, open its Keys section, copy the Access Key, then paste it here. Use the Background tab to select Unsplash.</div><div className="settings__keyhint">Keys and cached wallpapers are stored locally by the extension.</div></div>}
+            {section === 'data' && (
+              <div className="settings__section">
+                <div className="settings__group-title">Export All Data</div>
+                <div className="settings__group-help">Export all settings, tweaks, liked wallpapers, and notes as an encrypted .ottdata file. You choose a password to protect the file.</div>
+                <Row label="Export">
+                  <div className="settings__export-row">
+                    <input
+                      className="settings__input settings__input--compact"
+                      type="password"
+                      placeholder="Create a password"
+                      value={exportPassword}
+                      onChange={(e) => setExportPassword(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && exportPassword.trim()) handleExportAll(); }}
+                    />
+                    <button
+                      className="settings__btn settings__btn--primary"
+                      onClick={handleExportAll}
+                      disabled={!exportPassword.trim() || exportLoading}
+                    >
+                      {exportLoading ? (
+                        <span className="settings__btn-spinner" />
+                      ) : (
+                        <Download size={14} />
+                      )}
+                      {exportLoading ? 'Encrypting...' : 'Export'}
+                    </button>
+                  </div>
+                </Row>
+                <div className="settings__group-title" style={{ marginTop: 28 }}>Import Data</div>
+                <div className="settings__group-help">Import a previously exported .ottdata file. You'll need the password used during export.</div>
+                <Row label="Import">
+                  <div className="settings__export-row">
+                    <input
+                      className="settings__input settings__input--compact"
+                      type="password"
+                      placeholder="Enter password"
+                      value={importPassword}
+                      onChange={(e) => setImportPassword(e.target.value)}
+                    />
+                    <button
+                      className="settings__btn"
+                      onClick={() => importDataRef.current?.click()}
+                      disabled={!importPassword.trim() || importLoading}
+                    >
+                      {importLoading ? (
+                        <span className="settings__btn-spinner" />
+                      ) : (
+                        <Upload size={14} />
+                      )}
+                      {importLoading ? 'Decrypting...' : 'Import'}
+                    </button>
+                    <input
+                      ref={importDataRef}
+                      className="settings__file"
+                      type="file"
+                      accept=".ottdata"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file && importPassword.trim()) handleImportAll(file);
+                      }}
+                    />
+                  </div>
+                </Row>
+              </div>
+            )}
             {section === 'about' && <div className="settings__section"><div className="settings__about"><div className="settings__about-mark">OT</div><div className="settings__about-name">OnTrackTab</div><div className="settings__about-ver">Version {APP_VERSION} · May 2026</div><div className="settings__about-desc">A calmer new tab. Local-first, glass-light.</div></div><div className="settings__release"><div className="settings__group-title">Release notes</div><ul className="settings__release-list">{RELEASE_NOTES.map((note) => <li key={note}>{note}</li>)}</ul></div></div>}
           </div>
         </div>
