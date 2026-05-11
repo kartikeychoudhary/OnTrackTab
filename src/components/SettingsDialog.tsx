@@ -63,6 +63,7 @@ export function SettingsDialog({
   notes: Note[];
 }) {
   const [section, setSection] = React.useState('widgets');
+  const [showPositions, setShowPositions] = React.useState(false);
   const [newLoc, setNewLoc] = React.useState('');
   const videoInputRef = React.useRef<HTMLInputElement>(null);
   const [exportPassword, setExportPassword] = React.useState('');
@@ -155,7 +156,14 @@ export function SettingsDialog({
           <div className="modal__content">
             {section === 'widgets' && (
               <div className="settings__section">
-                <div className="settings__group-title">Visible widgets</div>
+                <div className="settings__group-title">
+                  Visible widgets
+                  {tweaks.layout === 'floating' && (
+                    <button className="settings__pos-toggle" onClick={() => setShowPositions((v) => !v)} data-on={showPositions ? '1' : '0'}>
+                      Positions
+                    </button>
+                  )}
+                </div>
                 <div className="settings__group-help">Toggle which widgets appear on the new tab and size them in floating or bento layouts.</div>
                 {(Object.keys(widgetLabels) as WidgetId[]).map((k) => (
                   <React.Fragment key={k}>
@@ -165,7 +173,7 @@ export function SettingsDialog({
                         <Toggle value={settings.showWidgets[k]} onChange={(v) => setWidget(k, v)} />
                       </div>
                     </Row>
-                    {tweaks.layout === 'floating' && (
+                    {tweaks.layout === 'floating' && showPositions && (
                       <PositionRow widgetId={k} position={tweaks.widgetPositions[k]} onChange={(pos) => onTweakChange('widgetPositions', { ...tweaks.widgetPositions, [k]: pos })} />
                     )}
                   </React.Fragment>

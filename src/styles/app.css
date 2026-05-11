@@ -933,6 +933,7 @@ button { font-family: inherit; }
   text-transform: uppercase;
   color: rgba(26,24,20,0.5);
   margin-bottom: 4px;
+  display: flex; align-items: center; justify-content: space-between;
 }
 .settings__group-help {
   font-size: 12px;
@@ -1939,3 +1940,15 @@ button { font-family: inherit; }
 .settings__pos-field--offset { flex-direction: row; align-items: center; gap: 4px; }
 .settings__pos-field--offset span { font-size: 10px; white-space: nowrap; }
 .settings__pos-field--offset .settings__pos-input { width: 48px; }
+
+.settings__pos-toggle {
+  appearance: none; border: 1px solid rgba(0,0,0,0.12);
+  background: transparent; color: rgba(26,24,20,0.5);
+  font: inherit; font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 3px 8px; border-radius: 6px; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.settings__pos-toggle:hover { color: #1a1814; border-color: rgba(0,0,0,0.25); }
+.settings__pos-toggle[data-on="1"] {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
