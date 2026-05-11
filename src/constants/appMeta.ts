@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.0.3';
+export const APP_VERSION = '1.0.4';
 
 export const RELEASE_NOTES = [
   'Magnification controls help floating and bento layouts fit more screen sizes.',
