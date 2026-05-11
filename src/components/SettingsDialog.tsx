@@ -63,6 +63,7 @@ export function SettingsDialog({
   const [section, setSection] = React.useState('widgets');
   const [newLoc, setNewLoc] = React.useState('');
   const importInputRef = React.useRef<HTMLInputElement>(null);
+  const videoInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (!open) return undefined;
@@ -208,8 +209,30 @@ export function SettingsDialog({
                 )}
                 {settings.background.type === 'video' && (
                   <div className="settings__media-fields">
-                    <div className="settings__group-help">Use a muted looping MP4/WebM URL for motion backgrounds.</div>
+                    <div className="settings__group-help">Use a muted looping MP4/WebM URL or browse a local MP4 file (max 50MB). Local files are session-only.</div>
                     <input className="settings__input" placeholder="https://example.com/background.webm" value={settings.background.videoUrl} onChange={(e) => setBackground({ videoUrl: e.target.value })} />
+                    <div className="settings__row" style={{ marginTop: 8 }}>
+                      <button className="settings__btn" onClick={() => videoInputRef.current?.click()}>
+                        <Upload size={14} /> Browse MP4
+                      </button>
+                      <input
+                        ref={videoInputRef}
+                        className="settings__file"
+                        type="file"
+                        accept="video/mp4,.mp4"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 50 * 1024 * 1024) {
+                            onNotify('Video file must be under 50MB.', 'error');
+                            if (videoInputRef.current) videoInputRef.current.value = '';
+                            return;
+                          }
+                          const url = URL.createObjectURL(file);
+                          setBackground({ videoUrl: url });
+                        }}
+                      />
+                    </div>
                     <Row label="Muted"><Toggle value={settings.background.muted} onChange={(v) => setBackground({ muted: v })} /></Row>
                   </div>
                 )}
