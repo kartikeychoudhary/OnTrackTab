@@ -92,3 +92,29 @@ export interface Settings {
   tempUnit: 'C' | 'F';
   background: BackgroundSettings;
 }
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExportPayload {
+  app: string;
+  version: string;
+  exportedAt: string;
+  tweaks: Tweaks;
+  settings: Settings;
+  likedWallpapers: LikedWallpaper[];
+  notes: Note[];
+}
+
+export interface EncryptedExport {
+  app: string;
+  version: string;
+  exportedAt: string;
+  encrypted: string;
+  salt: string;
+}
