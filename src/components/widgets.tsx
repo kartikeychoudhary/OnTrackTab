@@ -1,5 +1,5 @@
 import React from 'react';
-import { useStoredState } from '../hooks/useStoredState';
+export { NotesWidget } from './NotesWidget';
 import { loadExtensionValue, saveExtensionValue } from '../lib/extensionStorage';
 import type { CachedUnsplashWallpaper, LikedWallpaper, RenderedWallpaper } from '../types';
 
@@ -452,29 +452,6 @@ export function CalendarWidget({ holidays }: { holidays: string }) {
   const nav = (delta: number) => setView((v) => ({ y: v.m + delta < 0 ? v.y - 1 : v.m + delta > 11 ? v.y + 1 : v.y, m: (v.m + delta + 12) % 12 }));
   const upcoming = Object.entries(holidayMap).map(([k, label]) => ({ k, label, m: Number(k.slice(0, 2)) - 1, d: Number(k.slice(3, 5)) })).filter((h) => h.m === view.m).sort((a, b) => a.d - b.d);
   return <div className="glass glass--lg calendar"><div className="calendar__head"><div><div className="calendar__month">{MONTHS[view.m]}</div><div className="calendar__year">{view.y}</div></div><div className="calendar__nav"><button onClick={() => nav(-1)} aria-label="Previous month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6" /></svg></button><button className="calendar__today-btn" onClick={() => setView({ y: today.getFullYear(), m: today.getMonth() })}>Today</button><button onClick={() => nav(1)} aria-label="Next month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6" /></svg></button></div></div><div className="calendar__grid">{DOW.map((d) => <div key={d} className={`calendar__dow ${d === 'Sat' || d === 'Sun' ? 'calendar__dow--weekend' : ''}`}>{d[0]}</div>)}{cells.map((c, i) => <div key={i} className={['calendar__cell', c.muted && 'calendar__cell--muted', c.isToday && 'calendar__cell--today', c.isWeekend && !c.muted && 'calendar__cell--weekend', c.holiday && 'calendar__cell--holiday'].filter(Boolean).join(' ')} title={c.holiday}><span className="calendar__day">{c.day}</span>{c.holiday && <span className="calendar__pip" />}</div>)}</div>{upcoming.length > 0 && <div className="calendar__holidays">{upcoming.slice(0, 2).map((h) => <div key={h.k} className="calendar__holiday"><span className="calendar__holiday-date">{MONTHS[h.m].slice(0, 3)} {h.d}</span><span className="calendar__holiday-name">{h.label}</span></div>)}</div>}</div>;
-}
-
-const DEFAULT_NOTES = `# Today
-- [x] Ship the OnTrackTab prototype
-- [ ] Review weather widget icons
-- [ ] Reply to **Sara** about Q2 plan`;
-
-function renderMarkdown(src: string) {
-  return src.split('\n').map((line, idx) => {
-    if (line.startsWith('# ')) return <h1 key={idx} className="md-h md-h1">{line.slice(2)}</h1>;
-    if (/^[-*]\s+\[( |x|X)\]\s+/.test(line)) {
-      const checked = /\[(x|X)\]/.test(line);
-      return <div key={idx} className={`md-todo ${checked ? 'is-checked' : ''}`}><span className={`md-check ${checked ? 'is-checked' : ''}`}>{checked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="m5 12 5 5L20 7" /></svg>}</span><span>{line.replace(/^[-*]\s+\[( |x|X)\]\s+/, '')}</span></div>;
-    }
-    if (line.trim() === '') return <div key={idx} className="md-spacer" />;
-    return <p key={idx} className="md-p">{line}</p>;
-  });
-}
-
-export function NotesWidget() {
-  const [editing, setEditing] = React.useState(false);
-  const [text, setText] = useStoredState('ott-notes', DEFAULT_NOTES);
-  return <div className="glass glass--lg notes"><div className="notes__head"><div className="notes__title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M9 13h6M9 17h4" /></svg>Notes</div><button className="notes__toggle" onClick={() => setEditing((e) => !e)}>{editing ? 'Preview' : 'Edit'}</button></div>{editing ? <textarea className="notes__editor" value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} autoFocus /> : <div className="notes__preview">{renderMarkdown(text)}</div>}<div className="notes__foot"><span>markdown</span><span>{text.split('\n').length} lines · saved locally</span></div></div>;
 }
 
 const MOST_VISITED = [
