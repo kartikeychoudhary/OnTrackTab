@@ -464,7 +464,7 @@ button { font-family: inherit; }
   font-size: 11px; color: var(--fg-soft); font-variant-numeric: tabular-nums;
 }
 .weather__hilow-arrow { font-size: 9px; opacity: 0.5; }
-.weather__temp-col { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.weather__temp-col { display: flex; flex-direction: column; flex: 1; align-items: flex-end; gap: 2px; }
 .weather__dots {
   display: flex; gap: 5px;
   margin-top: 10px; justify-content: center;
