@@ -34,6 +34,7 @@ export function NotesWidget() {
   const [titleError, setTitleError] = React.useState('');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [content, setContent] = React.useState('');
+  const [editing, setEditing] = React.useState(true);
 
   const activeNote = notes.find((n) => n.id === activeId) || null;
 
@@ -255,6 +256,9 @@ export function NotesWidget() {
             {activeNote.title}
           </div>
         )}
+        <button className="notes__toggle" onClick={() => setEditing((e) => !e)}>
+          {editing ? 'Preview' : 'Edit'}
+        </button>
         <button
           className="notes__action-btn notes__action-btn--primary"
           onClick={() => saveNote(activeNote)}
@@ -264,16 +268,20 @@ export function NotesWidget() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><path d="M17 21v-8H7v8M7 3v5h8" /></svg>
         </button>
       </div>
-      <textarea
-        className="notes__editor notes__editor--detail"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        spellCheck={false}
-        placeholder="Write markdown here..."
-      />
-      <div className="notes__preview notes__preview--detail">
-        <div className="md-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
-      </div>
+      {editing ? (
+        <textarea
+          className="notes__editor notes__editor--detail"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          spellCheck={false}
+          placeholder="Write markdown here..."
+          autoFocus
+        />
+      ) : (
+        <div className="notes__preview notes__preview--detail">
+          <div className="md-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+        </div>
+      )}
       <div className="notes__foot">
         <span>markdown</span>
         <span>{content.split('\n').length} lines · {content.length} chars</span>
