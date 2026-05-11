@@ -43,6 +43,15 @@ export function WeatherDetail({ data, location, tempUnit, onClose, triggerRect }
     { label: 'Wind', value: `${data.wind} ${tempUnit === 'F' ? 'mph' : 'km/h'}${windDirectionLabel(data.windDirection)}` },
   ];
 
+  if (data.tempHigh != null && data.tempLow != null) {
+    rows.push({ label: 'High / Low', value: `${data.tempHigh}° / ${data.tempLow}°` });
+  }
+  if (data.sunriseTime) {
+    rows.push({ label: 'Sunrise', value: data.sunriseTime });
+  }
+  if (data.sunsetTime) {
+    rows.push({ label: 'Sunset', value: data.sunsetTime });
+  }
   if (data.visibility != null) {
     rows.push({ label: 'Visibility', value: `${data.visibility} km` });
   }

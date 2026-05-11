@@ -460,6 +460,9 @@ button { font-family: inherit; }
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
+.weather__hilow {
+  font-size: 11px; color: var(--fg-soft); text-align: center; margin-top: 4px; font-variant-numeric: tabular-nums;
+}
 .weather__dots {
   display: flex; gap: 5px;
   margin-top: 10px; justify-content: center;

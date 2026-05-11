@@ -293,6 +293,10 @@ export interface WeatherData {
   visibility?: number;
   uvIndex?: number;
   pressureSurfaceLevel?: number;
+  tempHigh?: number;
+  tempLow?: number;
+  sunriseTime?: string;
+  sunsetTime?: string;
   fetchedAt?: number;
   source: 'demo' | 'api' | 'cache';
 }
@@ -300,10 +304,10 @@ export interface WeatherData {
 const WEATHER_CACHE_TTL = 30 * 60 * 1000;
 
 const WEATHER_DATA: Record<string, WeatherData> = {
-  'San Francisco, CA': { temp: 16, feelsLike: 16, cond: 'Partly Cloudy', icon: 'cloud-sun', humidity: 72, wind: 12, source: 'demo' },
-  'Tokyo, JP': { temp: 22, feelsLike: 23, cond: 'Clear', icon: 'sun', humidity: 58, wind: 8, source: 'demo' },
-  'Reykjavik, IS': { temp: 4, feelsLike: 1, cond: 'Light Snow', icon: 'snow', humidity: 82, wind: 24, source: 'demo' },
-  'Bangalore, IN': { temp: 28, feelsLike: 31, cond: 'Rain', icon: 'rain', humidity: 88, wind: 6, source: 'demo' },
+  'San Francisco, CA': { temp: 16, feelsLike: 16, cond: 'Partly Cloudy', icon: 'cloud-sun', humidity: 72, wind: 12, tempHigh: 19, tempLow: 12, sunriseTime: '06:15', sunsetTime: '20:08', source: 'demo' },
+  'Tokyo, JP': { temp: 22, feelsLike: 23, cond: 'Clear', icon: 'sun', humidity: 58, wind: 8, tempHigh: 25, tempLow: 18, sunriseTime: '05:02', sunsetTime: '18:45', source: 'demo' },
+  'Reykjavik, IS': { temp: 4, feelsLike: 1, cond: 'Light Snow', icon: 'snow', humidity: 82, wind: 24, tempHigh: 6, tempLow: 1, sunriseTime: '09:30', sunsetTime: '16:45', source: 'demo' },
+  'Bangalore, IN': { temp: 28, feelsLike: 31, cond: 'Rain', icon: 'rain', humidity: 88, wind: 6, tempHigh: 32, tempLow: 24, sunriseTime: '06:00', sunsetTime: '18:30', source: 'demo' },
 };
 
 function weatherCacheKey(location: string, tempUnit: 'C' | 'F') {
@@ -342,6 +346,37 @@ async function fetchTomorrowWeather(location: string, apiKey: string, tempUnit: 
   const json = await res.json() as { data?: { values?: Record<string, number> } };
   const values = json.data?.values || {};
   const code = weatherCodeLabel(values.weatherCode);
+
+  let tempHigh: number | undefined;
+  let tempLow: number | undefined;
+  let sunriseTime: string | undefined;
+  let sunsetTime: string | undefined;
+
+  try {
+    const forecastUrl = new URL('https://api.tomorrow.io/v4/weather/forecast');
+    forecastUrl.searchParams.set('location', location);
+    forecastUrl.searchParams.set('units', units);
+    forecastUrl.searchParams.set('apikey', apiKey);
+    forecastUrl.searchParams.set('timesteps', '1d');
+    const forecastRes = await fetch(forecastUrl.toString(), { headers: { accept: 'application/json' } });
+    if (forecastRes.ok) {
+      const forecastJson = await forecastRes.json() as { timelines?: { daily?: Array<{ values?: Record<string, number> }> } };
+      const daily = forecastJson.timelines?.daily?.[0]?.values;
+      if (daily) {
+        tempHigh = daily.temperatureMax != null ? Math.round(daily.temperatureMax) : undefined;
+        tempLow = daily.temperatureMin != null ? Math.round(daily.temperatureMin) : undefined;
+        if (daily.sunriseTime) {
+          const sr = new Date(daily.sunriseTime as unknown as string);
+          sunriseTime = sr.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        if (daily.sunsetTime) {
+          const ss = new Date(daily.sunsetTime as unknown as string);
+          sunsetTime = ss.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+      }
+    }
+  } catch { /* forecast fetch is optional, realtime is primary */ }
+
   return {
     temp: Math.round(values.temperature ?? 0),
     feelsLike: Math.round(values.temperatureApparent ?? values.temperature ?? 0),
@@ -353,6 +388,10 @@ async function fetchTomorrowWeather(location: string, apiKey: string, tempUnit: 
     visibility: values.visibility != null ? Math.round(values.visibility) : undefined,
     uvIndex: values.uvIndex != null ? Math.round(values.uvIndex) : undefined,
     pressureSurfaceLevel: values.pressureSurfaceLevel != null ? Math.round(values.pressureSurfaceLevel) : undefined,
+    tempHigh,
+    tempLow,
+    sunriseTime,
+    sunsetTime,
     fetchedAt: Date.now(),
     source: 'api',
   };
@@ -431,6 +470,7 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
         </button>
       </div>
       <div className="weather__body"><div className="weather__icon"><WeatherIcon kind={data.icon} size={56} /></div><div className="weather__temp">{data.temp}<span className="weather__temp-unit">°{tempUnit}</span></div></div>
+      {(data.tempHigh != null && data.tempLow != null) && <div className="weather__hilow">H:{data.tempHigh}° L:{data.tempLow}°</div>}
       <div className="weather__meta"><div className="weather__meta-item"><span className="weather__meta-label">Feels</span><span className="weather__meta-val">{data.feelsLike}°</span></div><div className="weather__meta-item"><span className="weather__meta-label">Humidity</span><span className="weather__meta-val">{data.humidity}%</span></div><div className="weather__meta-item"><span className="weather__meta-label">Wind</span><span className="weather__meta-val">{data.wind} {windUnit}</span></div></div>
       <button className="weather__more" onClick={() => { setTriggerRect(weatherRef.current?.getBoundingClientRect()); setDetailOpen(true); }}>
         More
