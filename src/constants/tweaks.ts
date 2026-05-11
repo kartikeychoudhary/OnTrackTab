@@ -20,7 +20,7 @@ export const TWEAK_DEFAULTS: Tweaks = {
     search: { top: 220, centerH: true },
     weather: { top: 88, right: 24 },
     calendar: { bottom: 24, left: 24 },
-    notes: { top: 350, right: 24 },
+    notes: { top: 450, right: 24 },
     mostVisited: { bottom: 24, centerH: true },
   },
   accent: '#ff8a5b',
