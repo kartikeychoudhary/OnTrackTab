@@ -1842,11 +1842,34 @@ button { font-family: inherit; }
   position: fixed; inset: 0; z-index: 200;
   background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
+  animation: weatherFadeIn 0.2s ease-out;
+}
+.weather-detail-overlay.is-exiting {
+  animation: weatherFadeOut 0.28s ease-in forwards;
 }
 .weather-detail {
   background: var(--glass-bg-strong); backdrop-filter: blur(var(--blur, 20px)) saturate(var(--sat, 150%));
   border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px;
   max-width: 340px; width: 90vw; color: var(--fg);
+}
+.weather-detail.is-entering {
+  animation: weatherPopIn 0.35s cubic-bezier(.2,1.1,.58,1) forwards;
+}
+.weather-detail.is-entered {
+  animation: none;
+}
+.weather-detail.is-exiting {
+  animation: weatherPopOut 0.25s cubic-bezier(.55,0,.65,.55) forwards;
+}
+@keyframes weatherFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes weatherFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes weatherPopIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes weatherPopOut {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.88); opacity: 0; }
 }
 .weather-detail__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .weather-detail__location { font-size: 13px; font-weight: 600; }

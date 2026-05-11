@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import type { WeatherData } from './widgets';
 
 interface WeatherDetailProps {
@@ -6,6 +7,7 @@ interface WeatherDetailProps {
   location: string;
   tempUnit: 'C' | 'F';
   onClose: () => void;
+  triggerRect?: DOMRect;
 }
 
 function windDirectionLabel(deg?: number): string {
@@ -14,7 +16,21 @@ function windDirectionLabel(deg?: number): string {
   return ' ' + dirs[Math.round(deg / 45) % 8];
 }
 
-export function WeatherDetail({ data, location, tempUnit, onClose }: WeatherDetailProps) {
+export function WeatherDetail({ data, location, tempUnit, onClose, triggerRect }: WeatherDetailProps) {
+  const [phase, setPhase] = React.useState<'entering' | 'entered' | 'exiting'>('entering');
+
+  React.useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    window.addEventListener('keydown', handleKey);
+    requestAnimationFrame(() => setPhase('entered'));
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+
+  const close = () => {
+    setPhase('exiting');
+    setTimeout(onClose, 280);
+  };
+
   const updated = data.fetchedAt
     ? new Date(data.fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : null;
@@ -37,12 +53,26 @@ export function WeatherDetail({ data, location, tempUnit, onClose }: WeatherDeta
     rows.push({ label: 'Pressure', value: `${data.pressureSurfaceLevel} hPa` });
   }
 
-  return (
-    <div className="weather-detail-overlay" onClick={onClose}>
-      <div className="weather-detail" onClick={(e) => e.stopPropagation()}>
+  const originStyle: React.CSSProperties = {};
+  if (triggerRect) {
+    const cx = triggerRect.left + triggerRect.width / 2;
+    const cy = triggerRect.top + triggerRect.height / 2;
+    originStyle.transformOrigin = `${cx}px ${cy}px`;
+  }
+
+  const content = (
+    <div
+      className={`weather-detail-overlay ${phase === 'exiting' ? 'is-exiting' : ''}`}
+      onClick={close}
+    >
+      <div
+        className={`weather-detail ${phase === 'entering' ? 'is-entering' : phase === 'entered' ? 'is-entered' : 'is-exiting'}`}
+        style={originStyle}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="weather-detail__head">
           <div className="weather-detail__location">{location}</div>
-          <button className="weather-detail__close" onClick={onClose} aria-label="Close">×</button>
+          <button className="weather-detail__close" onClick={close} aria-label="Close">×</button>
         </div>
         <div className="weather-detail__temp">{data.temp}<span className="weather-detail__unit">°{tempUnit}</span></div>
         <div className="weather-detail__cond">{data.cond}</div>
@@ -62,4 +92,6 @@ export function WeatherDetail({ data, location, tempUnit, onClose }: WeatherDeta
       </div>
     </div>
   );
+
+  return createPortal(content, document.body);
 }

@@ -376,6 +376,8 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [detailOpen, setDetailOpen] = React.useState(false);
+  const [triggerRect, setTriggerRect] = React.useState<DOMRect | undefined>();
+  const weatherRef = React.useRef<HTMLDivElement>(null);
 
   const loadWeather = React.useCallback(async (force = false) => {
     const key = apiKey.trim();
@@ -418,7 +420,7 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
   const windUnit = tempUnit === 'F' ? 'mph' : 'km/h';
 
   return (
-    <div className="glass glass--lg weather">
+    <div className="glass glass--lg weather" ref={weatherRef}>
       <div className="weather__head">
         <div>
           <div className="weather__loc"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>{loc}</div>
@@ -430,7 +432,7 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
       </div>
       <div className="weather__body"><div className="weather__icon"><WeatherIcon kind={data.icon} size={56} /></div><div className="weather__temp">{data.temp}<span className="weather__temp-unit">°{tempUnit}</span></div></div>
       <div className="weather__meta"><div className="weather__meta-item"><span className="weather__meta-label">Feels</span><span className="weather__meta-val">{data.feelsLike}°</span></div><div className="weather__meta-item"><span className="weather__meta-label">Humidity</span><span className="weather__meta-val">{data.humidity}%</span></div><div className="weather__meta-item"><span className="weather__meta-label">Wind</span><span className="weather__meta-val">{data.wind} {windUnit}</span></div></div>
-      <button className="weather__more" onClick={() => setDetailOpen(true)}>
+      <button className="weather__more" onClick={() => { setTriggerRect(weatherRef.current?.getBoundingClientRect()); setDetailOpen(true); }}>
         More
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
       </button>
@@ -441,6 +443,7 @@ export function WeatherWidget({ locations, apiKey, tempUnit, onError }: { locati
           location={loc}
           tempUnit={tempUnit}
           onClose={() => setDetailOpen(false)}
+          triggerRect={triggerRect}
         />
       )}
     </div>
