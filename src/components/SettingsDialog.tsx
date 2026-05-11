@@ -1,7 +1,7 @@
 import React from 'react';
 import { CalendarDays, Cloud, Database, Download, Grid2X2, Image, Info, KeyRound, Minus, Plus, Search, SlidersHorizontal, Trash2, Upload, Video } from 'lucide-react';
 import { APP_VERSION, RELEASE_NOTES } from '../constants/appMeta';
-import type { BackgroundSettings, LikedWallpaper, Note, Settings, Tweaks, Wallpaper, WidgetId, WidgetSize } from '../types';
+import type { BackgroundSettings, LikedWallpaper, Note, Settings, Tweaks, Wallpaper, WidgetId, WidgetPosition, WidgetSize } from '../types';
 
 export const DEFAULT_SETTINGS: Settings = {
   tomorrowApiKey: '',
@@ -158,12 +158,17 @@ export function SettingsDialog({
                 <div className="settings__group-title">Visible widgets</div>
                 <div className="settings__group-help">Toggle which widgets appear on the new tab and size them in floating or bento layouts.</div>
                 {(Object.keys(widgetLabels) as WidgetId[]).map((k) => (
-                  <Row key={k} label={widgetLabels[k]} desc={widgetDesc(k)}>
-                    <div className="settings__widget-controls">
-                      <Segmented value={tweaks.widgetSizes[k]} options={widgetSizeOptions} onChange={(v) => onTweakChange('widgetSizes', { ...tweaks.widgetSizes, [k]: v as WidgetSize })} />
-                      <Toggle value={settings.showWidgets[k]} onChange={(v) => setWidget(k, v)} />
-                    </div>
-                  </Row>
+                  <React.Fragment key={k}>
+                    <Row key={k} label={widgetLabels[k]} desc={widgetDesc(k)}>
+                      <div className="settings__widget-controls">
+                        <Segmented value={tweaks.widgetSizes[k]} options={widgetSizeOptions} onChange={(v) => onTweakChange('widgetSizes', { ...tweaks.widgetSizes, [k]: v as WidgetSize })} />
+                        <Toggle value={settings.showWidgets[k]} onChange={(v) => setWidget(k, v)} />
+                      </div>
+                    </Row>
+                    {tweaks.layout === 'floating' && (
+                      <PositionRow widgetId={k} position={tweaks.widgetPositions[k]} onChange={(pos) => onTweakChange('widgetPositions', { ...tweaks.widgetPositions, [k]: pos })} />
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
             )}
@@ -389,4 +394,58 @@ function Select({ value, options, onChange }: { value: string; options: Array<{ 
 
 function Segmented({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
   return <div className="ui-seg">{options.map((o) => <button key={o} className={`ui-seg__btn ${value === o ? 'is-active' : ''}`} onClick={() => onChange(o)}>{o}</button>)}</div>;
+}
+
+function PositionRow({ widgetId, position, onChange }: { widgetId: string; position: WidgetPosition; onChange: (pos: WidgetPosition) => void }) {
+  const set = (patch: Partial<WidgetPosition>) => onChange({ ...position, ...patch });
+  const hasTop = position.top != null;
+  const hasBottom = position.bottom != null;
+  const hasLeft = position.left != null;
+  const hasRight = position.right != null;
+
+  return (
+    <div className="settings__pos-row">
+      <div className="settings__pos-label">Position</div>
+      <div className="settings__pos-grid">
+        <label className="settings__pos-field">
+          <span>Top</span>
+          <input className="settings__pos-input" type="number" value={hasTop ? position.top : ''} placeholder="—" onChange={(e) => set({ top: e.target.value ? Number(e.target.value) : undefined, centerV: false })} />
+        </label>
+        <label className="settings__pos-field">
+          <span>Right</span>
+          <input className="settings__pos-input" type="number" value={hasRight ? position.right : ''} placeholder="—" onChange={(e) => set({ right: e.target.value ? Number(e.target.value) : undefined, centerH: false })} />
+        </label>
+        <label className="settings__pos-field">
+          <span>Bottom</span>
+          <input className="settings__pos-input" type="number" value={hasBottom ? position.bottom : ''} placeholder="—" onChange={(e) => set({ bottom: e.target.value ? Number(e.target.value) : undefined, centerV: false })} />
+        </label>
+        <label className="settings__pos-field">
+          <span>Left</span>
+          <input className="settings__pos-input" type="number" value={hasLeft ? position.left : ''} placeholder="—" onChange={(e) => set({ left: e.target.value ? Number(e.target.value) : undefined, centerH: false })} />
+        </label>
+      </div>
+      <div className="settings__pos-toggles">
+        <label className="settings__pos-check">
+          <input type="checkbox" checked={!!position.centerH} onChange={(e) => set({ centerH: e.target.checked, left: undefined, right: undefined })} />
+          Center H
+        </label>
+        <label className="settings__pos-check">
+          <input type="checkbox" checked={!!position.centerV} onChange={(e) => set({ centerV: e.target.checked, top: undefined, bottom: undefined })} />
+          Center V
+        </label>
+        {position.centerH && (
+          <label className="settings__pos-field settings__pos-field--offset">
+            <span>Offset X%</span>
+            <input className="settings__pos-input" type="number" value={position.offsetX ?? 0} onChange={(e) => set({ offsetX: Number(e.target.value) })} />
+          </label>
+        )}
+        {position.centerV && (
+          <label className="settings__pos-field settings__pos-field--offset">
+            <span>Offset Y%</span>
+            <input className="settings__pos-input" type="number" value={position.offsetY ?? 0} onChange={(e) => set({ offsetY: Number(e.target.value) })} />
+          </label>
+        )}
+      </div>
+    </div>
+  );
 }

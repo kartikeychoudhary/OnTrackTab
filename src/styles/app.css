@@ -1903,3 +1903,37 @@ button { font-family: inherit; }
 
 .settings__export-row { display: flex; gap: 8px; align-items: center; }
 .settings__export-row .settings__input { flex: 1; }
+
+/* ── Widget position controls ── */
+.settings__pos-row {
+  padding: 6px 14px 10px;
+  border-bottom: 0.5px solid var(--glass-border);
+  margin-left: 14px;
+}
+.settings__pos-label {
+  font-size: 10px; color: var(--fg-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.settings__pos-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;
+}
+.settings__pos-field {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.settings__pos-field span {
+  font-size: 9px; color: var(--fg-soft); text-transform: uppercase; letter-spacing: 0.3px;
+}
+.settings__pos-input {
+  padding: 3px 6px; border-radius: 6px; border: 1px solid var(--glass-border);
+  background: var(--glass-bg); color: var(--fg); font-size: 11px;
+  outline: none; width: 100%; box-sizing: border-box; font-variant-numeric: tabular-nums;
+}
+.settings__pos-input:focus { border-color: var(--accent); }
+.settings__pos-input::placeholder { color: var(--fg-soft); }
+.settings__pos-toggles { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.settings__pos-check {
+  display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--fg-soft); cursor: pointer;
+}
+.settings__pos-check input { accent-color: var(--accent); }
+.settings__pos-field--offset { flex-direction: row; align-items: center; gap: 4px; }
+.settings__pos-field--offset span { font-size: 10px; white-space: nowrap; }
+.settings__pos-field--offset .settings__pos-input { width: 48px; }
