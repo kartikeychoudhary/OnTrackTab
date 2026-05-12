@@ -1,4 +1,4 @@
-# OnTrackTab v1.1.0 Release Notes
+# ZenBoard v1.1.0 Release Notes
 
 ## What's New
 
@@ -46,4 +46,4 @@
 
 ---
 
-**Chrome Web Store:** [OnTrackTab](https://chromewebstore.google.com/detail/ontracktab)
+**Chrome Web Store:** [ZenBoard](https://chromewebstore.google.com/detail/ontracktab)
