@@ -1,6 +1,8 @@
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.1.1';
 
 export const RELEASE_NOTES = [
+  'Renamed the extension from OnTrackTab to ZenBoard across the app and store materials.',
+  'Added the new ZenBoard logo to the extension icon, topbar, About panel, and promo assets.',
   'Multi-note system with list/detail views, search, and auto-save.',
   'Encrypted data export/import with password-protected JSON files.',
   'Full markdown rendering with interactive task checkboxes.',

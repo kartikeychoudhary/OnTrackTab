@@ -5,7 +5,7 @@ export function Topbar({ showClock, clockStyle }: { showClock: boolean; clockSty
   return (
     <div className="topbar">
       <div className="glass glass--sm topbar__brand">
-        <span className="topbar__brand-mark">ZB</span>
+        <img className="topbar__brand-mark" src="/icons/icon-128.png" alt="" aria-hidden="true" />
         ZenBoard
         <span className="topbar__greet">· {greeting()}</span>
       </div>

@@ -1,8 +1,8 @@
-# OnTrackTab Chrome Web Store Description
+# ZenBoard Chrome Web Store Description
 
-OnTrackTab is a calmer, local-first new tab dashboard for Chrome. It replaces the default new tab page with a clean workspace for search, time, weather, calendar, notes, frequently visited sites, and customizable wallpapers.
+ZenBoard is a calmer, local-first new tab dashboard for Chrome. It replaces the default new tab page with a clean workspace for search, time, weather, calendar, notes, frequently visited sites, and customizable wallpapers.
 
-Designed for people who want their browser start page to feel useful without feeling noisy, OnTrackTab keeps everyday tools close at hand while giving you control over layout, widgets, and background style.
+Designed for people who want their browser start page to feel useful without feeling noisy, ZenBoard keeps everyday tools close at hand while giving you control over layout, widgets, and background style.
 
 ## Key Features
 
@@ -23,7 +23,7 @@ Designed for people who want their browser start page to feel useful without fee
 
 ## Optional API Integrations
 
-OnTrackTab works without any API keys. You can optionally add:
+ZenBoard works without any API keys. You can optionally add:
 
 - Tomorrow.io API key for live weather data
 - Unsplash Access Key for live wallpaper photos
@@ -32,10 +32,14 @@ Keys are entered in the extension settings and stored locally by the browser.
 
 ## Privacy
 
-OnTrackTab is designed to be local-first. Your settings, notes, liked wallpapers, cached wallpaper data, and optional API keys are stored locally. External requests are only made when you enable features that need them, such as live weather or Unsplash wallpapers.
+ZenBoard is designed to be local-first. Your settings, notes, liked wallpapers, cached wallpaper data, and optional API keys are stored locally. External requests are only made when you enable features that need them, such as live weather or Unsplash wallpapers.
 
 Chrome permissions are used to support bookmark search, most-visited sites, and local extension storage.
 
 ## Short Description
 
 A calm, customizable, local-first Chrome new tab dashboard with search, widgets, notes, weather, calendar, and wallpapers.
+
+## v1.1.1 Update Note
+
+ZenBoard v1.1.1 completes the rename from OnTrackTab to ZenBoard, refreshes the extension icon and in-app branding, and adds updated Chrome Web Store promotional artwork.
