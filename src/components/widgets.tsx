@@ -31,7 +31,7 @@ export function ClockWidget({ style = 'minimal' }: { style?: 'minimal' | 'hero' 
 const SAMPLE_BOOKMARKS = [
   { title: 'GitHub - Pull Requests', url: 'github.com/pulls', folder: 'Work', favicon: '#0d1117' },
   { title: 'Linear - Q2 Sprint', url: 'linear.app/team/sprint', folder: 'Work', favicon: '#5e6ad2' },
-  { title: 'Figma - OnTrackTab v3', url: 'figma.com/file/ontrack', folder: 'Design', favicon: '#a259ff' },
+  { title: 'Figma - ZenBoard v3', url: 'figma.com/file/zenboard', folder: 'Design', favicon: '#a259ff' },
   { title: 'Hacker News', url: 'news.ycombinator.com', folder: 'Reading', favicon: '#ff6600' },
   { title: 'Notion - Personal', url: 'notion.so/personal', folder: 'Notes', favicon: '#000000' },
   { title: 'YouTube - Watch Later', url: 'youtube.com/playlist?list=WL', folder: 'Media', favicon: '#ff0000' },

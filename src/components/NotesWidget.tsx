@@ -154,7 +154,7 @@ export function NotesWidget() {
   // Initialize with default note if empty
   React.useEffect(() => {
     if (notes.length === 0) {
-      const defaultContent = '# Today\n- [x] Ship the OnTrackTab prototype\n- [ ] Review weather widget icons\n- [ ] Reply to **Sara** about Q2 plan';
+      const defaultContent = '# Today\n- [x] Ship the ZenBoard prototype\n- [ ] Review weather widget icons\n- [ ] Reply to **Sara** about Q2 plan';
       const note: Note = {
         id: crypto.randomUUID(),
         title: defaultTitle(),

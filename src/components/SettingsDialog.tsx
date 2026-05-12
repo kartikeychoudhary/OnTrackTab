@@ -375,7 +375,7 @@ export function SettingsDialog({
                 </Row>
               </div>
             )}
-            {section === 'about' && <div className="settings__section"><div className="settings__about"><div className="settings__about-mark">OT</div><div className="settings__about-name">OnTrackTab</div><div className="settings__about-ver">Version {APP_VERSION} · May 2026</div><div className="settings__about-desc">A calmer new tab. Local-first, glass-light.</div></div><div className="settings__release"><div className="settings__group-title">Release notes</div><ul className="settings__release-list">{RELEASE_NOTES.map((note) => <li key={note}>{note}</li>)}</ul></div></div>}
+            {section === 'about' && <div className="settings__section"><div className="settings__about"><div className="settings__about-mark">ZB</div><div className="settings__about-name">ZenBoard</div><div className="settings__about-ver">Version {APP_VERSION} · May 2026</div><div className="settings__about-desc">A calmer new tab. Local-first, glass-light.</div></div><div className="settings__release"><div className="settings__group-title">Release notes</div><ul className="settings__release-list">{RELEASE_NOTES.map((note) => <li key={note}>{note}</li>)}</ul></div></div>}
           </div>
         </div>
 

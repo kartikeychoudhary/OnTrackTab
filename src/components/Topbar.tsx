@@ -5,8 +5,8 @@ export function Topbar({ showClock, clockStyle }: { showClock: boolean; clockSty
   return (
     <div className="topbar">
       <div className="glass glass--sm topbar__brand">
-        <span className="topbar__brand-mark">OT</span>
-        OnTrackTab
+        <span className="topbar__brand-mark">ZB</span>
+        ZenBoard
         <span className="topbar__greet">· {greeting()}</span>
       </div>
       {showClock && (

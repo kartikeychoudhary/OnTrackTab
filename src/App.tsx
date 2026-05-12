@@ -116,7 +116,7 @@ export default function App() {
 
   const exportAllData = React.useCallback(async (password: string) => {
     const payload: ExportPayload = {
-      app: 'OnTrackTab',
+      app: 'ZenBoard',
       version: APP_VERSION,
       exportedAt: new Date().toISOString(),
       tweaks,
@@ -127,7 +127,7 @@ export default function App() {
     const json = JSON.stringify(payload, null, 2);
     const { encrypted, salt } = await encryptPayload(json, password);
     const container = JSON.stringify({
-      app: 'OnTrackTab',
+      app: 'ZenBoard',
       version: APP_VERSION,
       exportedAt: new Date().toISOString(),
       encrypted,
@@ -137,7 +137,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `ontracktab-backup-${new Date().toISOString().slice(0, 10)}.ottdata`;
+    anchor.download = `zenboard-backup-${new Date().toISOString().slice(0, 10)}.ottdata`;
     anchor.click();
     URL.revokeObjectURL(url);
   }, [tweaks, settings, likedWallpapers, notes]);

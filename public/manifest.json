@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "OnTrackTab",
+  "name": "ZenBoard",
   "version": "1.1.0",
   "description": "A calmer, local-first Chrome new tab page.",
   "icons": {
